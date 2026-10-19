@@ -642,6 +642,7 @@ $socialLinks = site_social_links();
         <li><a href="installation.php">Installation</a></li>
         <li><a href="projects.php">Projects</a></li>
         <li><a href="contact.php">Contact</a></li>
+        <li><a href="admin.php">Staff Login</a></li>
       </ul>
     </div>
     <div>
@@ -674,7 +675,7 @@ $socialLinks = site_social_links();
   <div class="legal">
     <div class="wrap">
       <span>&copy; <span id="year">2026</span> KYNOS Solar Systems. All rights reserved.</span>
-      <span><a href="#">Privacy Policy</a><a href="#">Terms of Service</a></span>
+      <span><a href="#">Privacy Policy</a><a href="#">Terms of Service</a><a href="https://princecaleb.dev" target="_blank" rel="noopener">Built by princecaleb.dev</a></span>
     </div>
   </div>
 </footer>
