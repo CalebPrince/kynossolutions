@@ -1,6 +1,0 @@
-@media (max-width: 850px) {
-  .navrow { min-height: 72px; flex-wrap: wrap; padding: 12px 0; gap: 12px; }
-  .navrow nav { order: 3; display: flex; width: 100%; margin: 0; gap: 22px; overflow-x: auto; scrollbar-width: none; }
-  .navrow nav::-webkit-scrollbar { display: none; }
-  .navrow nav a { padding: 10px 0; white-space: nowrap; }
-}

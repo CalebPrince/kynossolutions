@@ -15,6 +15,7 @@ function render_site_page(array $page): void
     $image = $page['image'] ?? 'images/hero.jpg';
     $sections = $page['sections'] ?? [];
     $cards = $page['cards'] ?? [];
+    $currentPage = basename((string) ($_SERVER['SCRIPT_NAME'] ?? ''));
     ?>
 <!doctype html>
 <html lang="en">
@@ -29,18 +30,26 @@ function render_site_page(array $page): void
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800;900&family=Mulish:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="assets/css/pages.css">
-  <link rel="stylesheet" href="assets/css/mobile-nav.css">
+  <link rel="stylesheet" href="assets/css/landing-header.css">
 </head>
 <body>
-  <header class="topbar">
-    <div class="shell navrow">
-      <a class="logo" href="index.php"><img src="images/logo.png" alt="KYNOS Solar Systems"></a>
-      <nav aria-label="Main navigation">
-        <a href="index.php">Home</a><a href="about.php"<?= $active === 'about' ? ' class="active"' : '' ?>>About</a><a href="solutions.php"<?= $active === 'solutions' ? ' class="active"' : '' ?>>Solutions</a><a href="projects.php"<?= $active === 'projects' ? ' class="active"' : '' ?>>Projects</a><a href="contact.php"<?= $active === 'contact' ? ' class="active"' : '' ?>>Contact</a>
+  <svg class="svg-sprite" aria-hidden="true"><symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol><symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol><symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14M14 7l5 5-5 5"/></symbol><symbol id="i-wa" viewBox="0 0 24 24"><path d="M20.5 11.7a8.5 8.5 0 0 1-12.6 7.5L3 20.5l1.3-4.7A8.5 8.5 0 1 1 20.5 11.7z"/><path d="M8.2 7.5c.2-.4.4-.4.7-.4h.5c.2 0 .4.1.5.4l.7 1.7c.1.3.1.5-.1.7l-.6.8c-.2.2-.2.4 0 .7.7 1.2 1.7 2.1 2.9 2.7.3.2.5.1.7-.1l.8-1c.2-.3.5-.3.8-.2l1.8.9c.3.1.4.3.4.6 0 .7-.3 1.5-.9 2-.6.5-1.4.8-2.2.7-1.4-.2-3.1-.9-4.8-2.4-1.3-1.2-2.4-2.8-2.8-4.2-.4-1.3-.2-2.3.2-2.9z"/></symbol></svg>
+  <header class="site-header scrolled">
+    <div class="header-wrap">
+      <a class="brand" href="index.php" aria-label="KYNOS Solar Systems home"><img src="images/logo.png" alt="KYNOS Solar Systems, Powering Your Future Sustainably"></a>
+      <nav class="main-nav" aria-label="Main navigation">
+        <a href="index.php">Home</a><a href="about.php"<?= $active === 'about' ? ' class="active"' : '' ?>>About Us</a><a href="solutions.php"<?= $active === 'solutions' && $currentPage !== 'installation.php' ? ' class="active"' : '' ?>>Solutions</a><a href="installation.php"<?= $currentPage === 'installation.php' ? ' class="active"' : '' ?>>Installation</a><a href="projects.php"<?= $active === 'projects' ? ' class="active"' : '' ?>>Projects</a><a href="contact.php"<?= $active === 'contact' ? ' class="active"' : '' ?>>Contact</a>
       </nav>
-      <a class="button whatsapp" href="<?= e(wa('Hello KYNOS Solar Systems, I would like a solar quote.')) ?>" target="_blank" rel="noopener">Get a quote</a>
+      <button class="nav-toggle" id="navToggle" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="drawer"><svg class="ico"><use href="#i-menu"/></svg></button>
+      <a class="header-quote" href="<?= e(wa('Hello KYNOS Solar Systems, I would like a quote for a solar system.')) ?>" target="_blank" rel="noopener"><svg class="ico wa"><use href="#i-wa"/></svg><span>Get a Quote</span></a>
     </div>
   </header>
+  <div class="drawer-backdrop" id="drawerBackdrop"></div>
+  <aside class="drawer" id="drawer" aria-label="Menu" inert>
+    <div class="drawer-head"><img src="images/logo.png" alt="KYNOS Solar Systems"><button class="drawer-close" type="button" id="drawerClose" aria-label="Close menu"><svg class="ico"><use href="#i-x"/></svg></button></div>
+    <nav class="drawer-nav" aria-label="Mobile navigation"><a href="index.php">Home<svg class="ico"><use href="#i-arrow"/></svg></a><a href="about.php">About Us<svg class="ico"><use href="#i-arrow"/></svg></a><a href="solutions.php">Solutions<svg class="ico"><use href="#i-arrow"/></svg></a><a href="installation.php">Installation<svg class="ico"><use href="#i-arrow"/></svg></a><a href="projects.php">Projects<svg class="ico"><use href="#i-arrow"/></svg></a><a href="contact.php">Contact<svg class="ico"><use href="#i-arrow"/></svg></a></nav>
+    <div class="drawer-actions"><a class="header-quote" href="<?= e(wa('Hello KYNOS Solar Systems, I would like a quote for a solar system.')) ?>" target="_blank" rel="noopener"><svg class="ico wa"><use href="#i-wa"/></svg>Get a Quote</a><a class="drawer-assessment" href="index.php#assessment">Start Load Assessment</a><a class="drawer-call" href="tel:+<?= KYNOS_PHONE_INTL ?>">Call <?= KYNOS_PHONE ?></a><p>Solar packages from GHC 39,000</p></div>
+  </aside>
 
   <main>
     <section class="page-hero">
@@ -78,6 +87,9 @@ function render_site_page(array $page): void
   </main>
 
   <footer><div class="shell footer-grid"><div><img src="images/logo.png" alt="KYNOS Solar Systems"><p>Reliable solar solutions for homes, offices and businesses in Ghana.</p></div><div><h2>Solutions</h2><a href="solar-panels.php">Solar panels</a><a href="inverters.php">Inverters</a><a href="lithium-batteries.php">Lithium batteries</a><a href="installation.php">Installation</a></div><div><h2>Contact</h2><a href="tel:+<?= KYNOS_PHONE_INTL ?>"><?= KYNOS_PHONE ?></a><span>Accra &amp; Tema, Ghana</span></div></div><div class="copyright"><div class="shell">&copy; <?= date('Y') ?> KYNOS Solar Systems.</div></div></footer>
+  <script>
+  (function(){var body=document.body,toggle=document.getElementById('navToggle'),drawer=document.getElementById('drawer'),close=document.getElementById('drawerClose'),backdrop=document.getElementById('drawerBackdrop');function setDrawer(open){body.classList.toggle('drawer-open',open);drawer.inert=!open;toggle.setAttribute('aria-expanded',String(open));if(open)close.focus()}toggle.addEventListener('click',function(){setDrawer(true)});close.addEventListener('click',function(){setDrawer(false)});backdrop.addEventListener('click',function(){setDrawer(false)});drawer.addEventListener('click',function(event){if(event.target.closest('a'))setDrawer(false)});document.addEventListener('keydown',function(event){if(event.key==='Escape')setDrawer(false)});})();
+  </script>
 </body>
 </html>
 <?php
