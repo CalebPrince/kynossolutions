@@ -26,7 +26,7 @@ In GitHub, open **Settings → Environments → New environment** and create `pr
 
 Add these optional environment variables:
 
-- `FTP_SERVER_DIR` — deployment folder; defaults to `/kynossolutions.com/`
+- `FTP_SERVER_DIR` — deployment folder; defaults to `/` because the FTP account is rooted at the `kynossolutions.com` document directory
 - `LIVE_URL` — public URL; defaults to `https://kynossolutions.com`
 
 Keep the production `config.php` directly on Namecheap. The deployment workflow does not upload or delete it. The MySQL database and `database.sql` migration remain manual cPanel/phpMyAdmin operations.

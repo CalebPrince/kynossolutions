@@ -60,7 +60,8 @@ jobs:
           protocol: ftps
           security: strict
           local-dir: ./release/
-          server-dir: ${{ vars.FTP_SERVER_DIR || '/kynossolutions.com/' }}
+          # This FTP account is rooted at the kynossolutions.com document directory.
+          server-dir: ${{ vars.FTP_SERVER_DIR || '/' }}
           state-name: .kynos-deploy-state.json
           dry-run: ${{ github.event_name == 'workflow_dispatch' && inputs['dry-run'] || false }}
           exclude: |
@@ -78,8 +79,8 @@ jobs:
             echo "::error::The live home page returned HTTP $status."
             exit 1
           fi
-          grep -q "KYNOS Solar Systems" response.html || {
-            echo "::error::The live page did not contain the expected KYNOS content."
+          grep -q "GHC 39,000" response.html && grep -q "GHC 55,400" response.html && grep -q "GHC 82,000" response.html || {
+            echo "::error::The live page does not contain the current Bronze, Silver and Gold pricing."
             exit 1
           }
           echo "Deployment verified at $LIVE_URL"
