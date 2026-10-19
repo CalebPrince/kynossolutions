@@ -60,7 +60,7 @@ jobs:
           protocol: ftps
           security: strict
           local-dir: ./release/
-          server-dir: ${{ vars.FTP_SERVER_DIR || '/public_html/' }}
+          server-dir: ${{ vars.FTP_SERVER_DIR || '/kynossolutions.com/' }}
           state-name: .kynos-deploy-state.json
           dry-run: ${{ github.event_name == 'workflow_dispatch' && inputs['dry-run'] || false }}
           exclude: |
