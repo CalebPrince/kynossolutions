@@ -1,0 +1,5 @@
+{
+  "description": "PHP and MySQL website for KYNOS Solar Systems (Accra, Ghana), with a solar load assessment, lead capture, and Tailwind admin dashboard.",
+  "tags": ["PHP", "MySQL", "Tailwind CSS", "JavaScript", "Solar"],
+  "category": "Web"
+}
