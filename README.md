@@ -14,6 +14,23 @@ PHP 8.1+, Tailwind CSS, and MySQL website prepared for Namecheap cPanel shared h
 
 `config.php` is ignored by Git and blocked by `.htaccess`. Never commit production credentials.
 
+## Automatic GitHub deployment
+
+Every push to `main` runs `.github/workflows/deploy.yml` and uploads the public release to Namecheap over FTPS. The workflow deliberately excludes `config.php`, database setup files, documentation, and repository metadata.
+
+In GitHub, open **Settings → Environments → New environment** and create `production`. Add these environment secrets:
+
+- `FTP_SERVER` — the Namecheap FTP hostname, such as `server123.web-hosting.com`
+- `FTP_USERNAME` — the cPanel or FTP account username
+- `FTP_PASSWORD` — the FTP account password
+
+Add these optional environment variables:
+
+- `FTP_SERVER_DIR` — deployment folder; defaults to `/public_html/`
+- `LIVE_URL` — public URL; defaults to `https://kynossolutions.com`
+
+Keep the production `config.php` directly on Namecheap. The deployment workflow does not upload or delete it. The MySQL database and `database.sql` migration remain manual cPanel/phpMyAdmin operations.
+
 ## Migrating from Vercel
 
 Vercel cannot run this traditional PHP/MySQL application. Point the domain DNS to Namecheap hosting after the files and database are verified in cPanel. Preserve the existing domain and paths so the current canonical and social-preview URLs continue to work.

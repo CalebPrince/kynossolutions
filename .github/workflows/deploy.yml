@@ -1,0 +1,85 @@
+name: Deploy to Namecheap
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      dry-run:
+        description: Preview the FTP changes without uploading
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: kynos-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-24.04
+    environment: production
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out main
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Validate deployment configuration
+        env:
+          FTP_SERVER: ${{ secrets.FTP_SERVER }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+        run: |
+          if [ -z "$FTP_SERVER" ] || [ -z "$FTP_USERNAME" ] || [ -z "$FTP_PASSWORD" ]; then
+            echo "::error::Add FTP_SERVER, FTP_USERNAME and FTP_PASSWORD to the production environment secrets."
+            exit 1
+          fi
+          if [ -e config.php ]; then
+            echo "::error::config.php must remain server-only and must not be committed."
+            exit 1
+          fi
+
+      - name: Assemble public release
+        run: |
+          mkdir release
+          cp index.php admin.php submit-assessment.php .htaccess release/
+          cp -R app images release/
+          find release -type f -print | sort
+
+      - name: Deploy over FTPS
+        uses: SamKirkland/FTP-Deploy-Action@3a9c65ae0fc12ac924ccef8afc26941cc43aad0b # v4.4.0
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          protocol: ftps
+          security: strict
+          local-dir: ./release/
+          server-dir: ${{ vars.FTP_SERVER_DIR || '/public_html/' }}
+          state-name: .kynos-deploy-state.json
+          dry-run: ${{ github.event_name == 'workflow_dispatch' && inputs['dry-run'] || false }}
+          exclude: |
+            **/.git*
+            **/.git*/**
+            config.php
+
+      - name: Verify the live site
+        if: ${{ !(github.event_name == 'workflow_dispatch' && inputs['dry-run']) }}
+        env:
+          LIVE_URL: ${{ vars.LIVE_URL || 'https://kynossolutions.com' }}
+        run: |
+          status=$(curl --silent --show-error --location --output response.html --write-out '%{http_code}' --max-time 30 "$LIVE_URL/")
+          if [ "$status" != "200" ]; then
+            echo "::error::The live home page returned HTTP $status."
+            exit 1
+          fi
+          grep -q "KYNOS Solar Systems" response.html || {
+            echo "::error::The live page did not contain the expected KYNOS content."
+            exit 1
+          }
+          echo "Deployment verified at $LIVE_URL"
