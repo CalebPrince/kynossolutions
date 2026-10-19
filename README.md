@@ -2,6 +2,8 @@
 
 PHP 8.1+, Tailwind CSS, and MySQL website prepared for Namecheap cPanel shared hosting. The public site includes the solar load assessment; completed assessments are stored in MySQL and available in the password-protected admin dashboard.
 
+The public site includes dedicated About, Solutions, Projects and Contact pages. Solutions is the parent page for Solar Panels, Hybrid Inverters, Lithium Batteries and Installation Services.
+
 ## Namecheap cPanel deployment
 
 1. In cPanel, create a MySQL database and database user, then grant the user **All Privileges**.

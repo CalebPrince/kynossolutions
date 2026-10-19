@@ -422,14 +422,14 @@ $csrfToken = $_SESSION['csrf_token'];
 
 <header class="site-header">
   <div class="wrap">
-    <a class="brand" href="#home" aria-label="KYNOS Solar Systems home"><img src="images/logo.png" alt="KYNOS Solar Systems, Powering Your Future Sustainably"></a>
+    <a class="brand" href="index.php" aria-label="KYNOS Solar Systems home"><img src="images/logo.png" alt="KYNOS Solar Systems, Powering Your Future Sustainably"></a>
     <nav class="nav" id="nav" aria-label="Main">
-      <a href="#home" class="active">Home</a>
-      <a href="#why">About Us</a>
-      <a href="#solutions">Products</a>
-      <a href="#assessment">Services</a>
-      <a href="#projects">Projects</a>
-      <a href="#contact">Contact</a>
+      <a href="index.php" class="active">Home</a>
+      <a href="about.php">About Us</a>
+      <a href="solutions.php">Solutions</a>
+      <a href="installation.php">Installation</a>
+      <a href="projects.php">Projects</a>
+      <a href="contact.php">Contact</a>
     </nav>
     <button class="nav-toggle" id="navToggle" aria-label="Open menu" aria-expanded="false" aria-controls="drawer"><svg class="ico"><use href="#i-menu"/></svg></button>
     <a class="btn btn-wa" data-wa="Hello KYNOS Solar Systems, I would like a quote for a solar system." href="#contact"><svg class="ico wa"><use href="#i-wa"/></svg><span>Get a Quote</span></a>
@@ -443,12 +443,12 @@ $csrfToken = $_SESSION['csrf_token'];
     <button class="drawer-close" type="button" id="drawerClose" aria-label="Close menu"><svg class="ico"><use href="#i-x"/></svg></button>
   </div>
   <nav class="drawer-nav" aria-label="Mobile">
-    <a href="#home" style="--i:0">Home<svg class="ico"><use href="#i-arrow"/></svg></a>
-    <a href="#why" style="--i:1">About Us<svg class="ico"><use href="#i-arrow"/></svg></a>
-    <a href="#solutions" style="--i:2">Products<svg class="ico"><use href="#i-arrow"/></svg></a>
-    <a href="#assessment" style="--i:3">Services<svg class="ico"><use href="#i-arrow"/></svg></a>
-    <a href="#projects" style="--i:4">Projects<svg class="ico"><use href="#i-arrow"/></svg></a>
-    <a href="#contact" style="--i:5">Contact<svg class="ico"><use href="#i-arrow"/></svg></a>
+    <a href="index.php" style="--i:0">Home<svg class="ico"><use href="#i-arrow"/></svg></a>
+    <a href="about.php" style="--i:1">About Us<svg class="ico"><use href="#i-arrow"/></svg></a>
+    <a href="solutions.php" style="--i:2">Solutions<svg class="ico"><use href="#i-arrow"/></svg></a>
+    <a href="installation.php" style="--i:3">Installation<svg class="ico"><use href="#i-arrow"/></svg></a>
+    <a href="projects.php" style="--i:4">Projects<svg class="ico"><use href="#i-arrow"/></svg></a>
+    <a href="contact.php" style="--i:5">Contact<svg class="ico"><use href="#i-arrow"/></svg></a>
   </nav>
   <div class="drawer-actions">
     <a class="btn btn-wa" data-wa="Hello KYNOS Solar Systems, I would like a quote for a solar system." href="#contact"><svg class="ico wa"><use href="#i-wa"/></svg>Get a Quote</a>
@@ -491,32 +491,32 @@ $csrfToken = $_SESSION['csrf_token'];
           <h2>Our <span class="accent">Solutions</span></h2>
           <p>Everything you need to go solar: high quality products, professional installation and ongoing support.</p>
         </div>
-        <a class="btn btn-outline btn-sm" data-wa="Hello KYNOS Solar Systems, please send me your full product list." href="#contact">View All Products <svg class="ico"><use href="#i-arrow"/></svg></a>
+        <a class="btn btn-outline btn-sm" href="solutions.php">View All Solutions <svg class="ico"><use href="#i-arrow"/></svg></a>
       </div>
       <div class="solutions">
         <article class="solution">
           <span class="shot"><img src="images/solar-panels.jpg" alt="Rooftop solar panels at sunset" loading="lazy"></span>
           <h3>Solar Panels</h3>
           <p>High efficiency solar panels for maximum energy production.</p>
-          <a class="btn btn-outline btn-sm" data-wa="Hello KYNOS Solar Systems, I would like to know more about your solar panels." href="#contact">View Panels <svg class="ico"><use href="#i-arrow"/></svg></a>
+          <a class="btn btn-outline btn-sm" href="solar-panels.php">View Panels <svg class="ico"><use href="#i-arrow"/></svg></a>
         </article>
         <article class="solution">
           <span class="shot"><img src="images/inverters.jpg" alt="KYNOS inverters beside a solar array" loading="lazy"></span>
           <h3>Inverters</h3>
           <p>Reliable and efficient inverters for homes, offices and businesses.</p>
-          <a class="btn btn-outline btn-sm" data-wa="Hello KYNOS Solar Systems, I would like to know more about your inverters." href="#contact">View Inverters <svg class="ico"><use href="#i-arrow"/></svg></a>
+          <a class="btn btn-outline btn-sm" href="inverters.php">View Inverters <svg class="ico"><use href="#i-arrow"/></svg></a>
         </article>
         <article class="solution">
           <span class="shot"><img src="images/batteries.jpg" alt="KYNOS lithium battery stacks" loading="lazy"></span>
           <h3>Lithium Batteries</h3>
           <p>Long-lasting lithium batteries for reliable backup power.</p>
-          <a class="btn btn-outline btn-sm" data-wa="Hello KYNOS Solar Systems, I would like to know more about your lithium batteries." href="#contact">View Batteries <svg class="ico"><use href="#i-arrow"/></svg></a>
+          <a class="btn btn-outline btn-sm" href="lithium-batteries.php">View Batteries <svg class="ico"><use href="#i-arrow"/></svg></a>
         </article>
         <article class="solution">
           <span class="shot"><img src="images/installation.jpg" alt="KYNOS technicians installing solar panels on a roof" loading="lazy"></span>
           <h3>Installation Services</h3>
           <p>Professional solar installation tailored to your needs.</p>
-          <a class="btn btn-outline btn-sm" data-wa="Hello KYNOS Solar Systems, I would like to know more about your installation services." href="#contact">Learn More <svg class="ico"><use href="#i-arrow"/></svg></a>
+          <a class="btn btn-outline btn-sm" href="installation.php">Learn More <svg class="ico"><use href="#i-arrow"/></svg></a>
         </article>
       </div>
     </div>
@@ -577,7 +577,7 @@ $csrfToken = $_SESSION['csrf_token'];
           <h2>Recent <span class="accent">Projects</span></h2>
           <p>Take a look at some of our recent solar installations for homes, offices and businesses.</p>
         </div>
-        <a class="btn btn-outline btn-sm" data-wa="Hello KYNOS Solar Systems, I would like to see more of your recent projects." href="#contact">View All Projects <svg class="ico"><use href="#i-arrow"/></svg></a>
+        <a class="btn btn-outline btn-sm" href="projects.php">View All Projects <svg class="ico"><use href="#i-arrow"/></svg></a>
       </div>
       <div class="projects">
         <article class="project"><span class="shot"><img src="images/hero.jpg" alt="Home with a rooftop solar array" loading="lazy" style="object-position: 70% 30%"></span><h3>Residential Installation</h3><p><svg class="ico"><use href="#i-pin"/></svg>Accra, Ghana</p></article>
@@ -604,25 +604,25 @@ $csrfToken = $_SESSION['csrf_token'];
 
 <footer class="site-footer">
   <div class="wrap cols">
-    <a class="brand" href="#home"><img src="images/logo.png" alt="KYNOS Solar Systems, Powering Your Future Sustainably" loading="lazy"></a>
+    <a class="brand" href="index.php"><img src="images/logo.png" alt="KYNOS Solar Systems, Powering Your Future Sustainably" loading="lazy"></a>
     <div>
       <h4>Quick Links</h4>
       <ul>
-        <li><a href="#home">Home</a></li>
-        <li><a href="#why">About Us</a></li>
-        <li><a href="#solutions">Products</a></li>
-        <li><a href="#assessment">Services</a></li>
-        <li><a href="#projects">Projects</a></li>
-        <li><a href="#contact">Contact</a></li>
+        <li><a href="index.php">Home</a></li>
+        <li><a href="about.php">About Us</a></li>
+        <li><a href="solutions.php">Solutions</a></li>
+        <li><a href="installation.php">Installation</a></li>
+        <li><a href="projects.php">Projects</a></li>
+        <li><a href="contact.php">Contact</a></li>
       </ul>
     </div>
     <div>
       <h4>Our Services</h4>
       <ul>
-        <li>Solar Panel Sales</li>
-        <li>Inverter Sales</li>
-        <li>Lithium Batteries</li>
-        <li>Solar Installation</li>
+        <li><a href="solar-panels.php">Solar Panel Sales</a></li>
+        <li><a href="inverters.php">Inverter Sales</a></li>
+        <li><a href="lithium-batteries.php">Lithium Batteries</a></li>
+        <li><a href="installation.php">Solar Installation</a></li>
         <li>Maintenance &amp; Support</li>
         <li>Custom Solar Solutions</li>
       </ul>
@@ -824,19 +824,10 @@ $csrfToken = $_SESSION['csrf_token'];
     a.target = "_blank";
     a.rel = "noopener";
   });
-  /* sticky header: solid background once scrolled, and highlight the section in view */
+  /* sticky header: solid background once scrolled */
   var header = document.querySelector(".site-header");
-  var navLinks = Array.prototype.slice.call(document.querySelectorAll("#nav a"));
-  var spy = navLinks.map(function (l) { return document.querySelector(l.getAttribute("href")); });
   function onScroll() {
     header.classList.toggle("scrolled", window.scrollY > 20);
-    var current = 0, best = -Infinity;
-    spy.forEach(function (sec, i) {
-      var top = sec.getBoundingClientRect().top - 140;
-      if (top <= 0 && top > best) { best = top; current = i; }
-    });
-    if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 4) current = navLinks.length - 1;
-    navLinks.forEach(function (l, i) { l.classList.toggle("active", i === current); });
   }
   window.addEventListener("scroll", onScroll, { passive: true });
   onScroll();

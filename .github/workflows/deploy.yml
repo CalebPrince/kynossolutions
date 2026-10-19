@@ -47,8 +47,8 @@ jobs:
       - name: Assemble public release
         run: |
           mkdir release
-          cp index.php admin.php submit-assessment.php .htaccess release/
-          cp -R app images release/
+          cp ./*.php .htaccess release/
+          cp -R app assets images release/
           find release -type f -print | sort
 
       - name: Deploy over FTPS
@@ -83,4 +83,11 @@ jobs:
             echo "::error::The live page does not contain the current Bronze, Silver and Gold pricing."
             exit 1
           }
+          for page in about.php solutions.php solar-panels.php inverters.php lithium-batteries.php installation.php projects.php contact.php; do
+            page_status=$(curl --silent --show-error --location --output /dev/null --write-out '%{http_code}' --max-time 30 "$LIVE_URL/$page")
+            if [ "$page_status" != "200" ]; then
+              echo "::error::$page returned HTTP $page_status."
+              exit 1
+            fi
+          done
           echo "Deployment verified at $LIVE_URL"
