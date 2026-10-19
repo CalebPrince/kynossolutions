@@ -5,6 +5,7 @@ return [
     'DB_NAME' => 'cpaneluser_kynos',
     'DB_USER' => 'cpaneluser_kynos',
     'DB_PASS' => 'replace-with-a-strong-password',
+    // Long random string used to hash IP addresses in logs. Generate with:
+    // php -r "echo bin2hex(random_bytes(32)), PHP_EOL;"
     'APP_KEY' => 'replace-with-a-long-random-string',
-    'ADMIN_PASSWORD_HASH' => '$2y$12$replace_with_password_hash',
 ];

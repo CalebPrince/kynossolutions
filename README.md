@@ -7,14 +7,35 @@ The public site includes dedicated About, Solutions, Projects and Contact pages.
 ## Namecheap cPanel deployment
 
 1. In cPanel, create a MySQL database and database user, then grant the user **All Privileges**.
-2. Open phpMyAdmin, select the new database, and import `database.sql`.
-3. Copy `config.php.example` to `config.php` and enter the cPanel database values. Generate the admin hash locally with:
-   `php -r "echo password_hash('YOUR-STRONG-PASSWORD', PASSWORD_DEFAULT), PHP_EOL;"`
+2. Open phpMyAdmin, select the database, and import `database.sql` for a fresh install, or `database-migration-v1.sql` when upgrading an existing site. **Run the migration before the new dashboard goes live.**
+3. Copy `config.php.example` to `config.php` and fill in the cPanel database values plus a long random `APP_KEY` (used to hash IP addresses in audit records). Generate one with:
+   `php -r "echo bin2hex(random_bytes(32)), PHP_EOL;"`
 4. Upload the project contents to the domain's `public_html` folder. Do not upload the old `index.html`; `index.php` is the entry point.
-5. In cPanel **MultiPHP Manager**, choose PHP 8.1 or newer. Ensure `pdo_mysql` and `mbstring` are enabled.
-6. Visit the home page, complete a test assessment, then sign in at `/admin.php` and confirm it appears.
+5. In cPanel **MultiPHP Manager**, choose PHP 8.1 or newer. Ensure `pdo_mysql`, `openssl` and `mbstring` are enabled.
+6. Visit `/admin.php`. While no administrator exists you will see a one-time setup screen; create the first **super administrator** there. There is deliberately no default or hard-coded password.
+7. Sign in, then complete a test assessment on the home page and confirm it appears under **Customers**.
 
-`config.php` is ignored by Git and blocked by `.htaccess`. Never commit production credentials.
+`config.php` is ignored by Git and blocked by `.htaccess`. Never commit production credentials or administrator passwords.
+
+## Administration
+
+Access is role-based and always enforced on the server, never only by hiding menus:
+
+- **super_admin** — customers, site content, contact/social settings, team management and the audit log.
+- **admin** — customers, site content and contact/social settings.
+- **staff** — view customers, update enquiry status.
+
+The final active super administrator cannot be demoted or disabled. Users are enabled or disabled, not deleted. See `SECURITY.md` (controls), `ARCHITECTURE.md` (data flow) and `GUI.md` (interface contract); the approved baseline is `security-baseline.yaml`.
+
+## Tests
+
+```
+php tests/run-tests.php                  # unit tests, no database required
+TEST_DB_HOST=127.0.0.1 TEST_DB_NAME=kynos_test TEST_DB_USER=root php tests/integration.php
+```
+
+`tests/integration.php` mirrors the migration schema in a scratch database that it wipes and recreates, then exercises bootstrap, login, throttling, CSRF, role denials, settings, the final-super-admin guard and the append-only audit log. It is skipped when the `TEST_DB_*` variables are absent. Never point it at production.
+
 
 ## Automatic GitHub deployment
 

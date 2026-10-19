@@ -51,3 +51,26 @@ function json_response(array $body, int $status = 200): never
     echo json_encode($body, JSON_UNESCAPED_SLASHES);
     exit;
 }
+
+function request_ip(): string
+{
+    return (string) ($_SERVER['REMOTE_ADDR'] ?? '');
+}
+
+function request_ip_hash(): string
+{
+    return hash('sha256', request_ip() . env_value('APP_KEY', 'kynos'));
+}
+
+function is_https(): bool
+{
+    if (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') {
+        return true;
+    }
+    return strtolower((string) ($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '')) === 'https';
+}
+
+function e(?string $value): string
+{
+    return htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8');
+}

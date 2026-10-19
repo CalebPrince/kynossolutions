@@ -41,13 +41,13 @@ $appliances = is_array($data['appliances'] ?? null) ? array_slice($data['applian
 
 try {
     $statement = db()->prepare(
-        'INSERT INTO solar_assessments
+        'INSERT INTO customer_enquiries
         (name, phone, email, location, property_type, usage_mode, notes, running_load_w,
          daily_energy_kwh, inverter_kva, battery_kwh, panel_count, recommended_package,
          appliances_json, ip_hash, user_agent)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
     );
-    $ipHash = hash('sha256', (string) ($_SERVER['REMOTE_ADDR'] ?? '') . env_value('APP_KEY', 'kynos'));
+    $ipHash = request_ip_hash();
     $statement->execute([
         $name, $phone, $email ?: null, $location, $text('property_type', 40),
         $text('usage_mode', 40), $text('notes', 500), $number('running_load_w', 0, 1000000),

@@ -1,6 +1,5 @@
 <?php
 require __DIR__ . '/app/site-layout.php';
-require __DIR__ . '/app/site-data.php';
 render_site_page([
     'title' => 'Solar solutions built around your property',
     'description' => 'Explore KYNOS solar panels, hybrid inverters, lithium batteries and professional solar installation services in Ghana.',
@@ -14,8 +13,9 @@ render_site_page([
     'cards_intro' => 'Learn what each component does and how it supports reliable power for your property.',
     'sections' => [[
         'title' => 'Start with what you need to power',
-        'text' => 'A useful solar recommendation begins with your actual appliances, daily usage and backup expectations—not a package name alone.',
+        'text' => 'A useful solar recommendation begins with your actual appliances, daily usage and backup expectations, not a package name alone.',
         'items' => ['List the appliances you want to run', 'Estimate how many hours each appliance is used', 'Choose backup, hybrid or off-grid use', 'Confirm the final design during a site assessment'],
     ]],
     'packages' => solar_packages(),
 ]);
+

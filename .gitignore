@@ -2,3 +2,9 @@
 /.env
 /vendor/
 /node_modules/
+
+# Local tooling and working files
+/.claude/
+/.playwright-mcp/
+/*.zip
+/*.png

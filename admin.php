@@ -1,112 +1,227 @@
 <?php
 declare(strict_types=1);
-session_start();
+
 require __DIR__ . '/app/bootstrap.php';
+require __DIR__ . '/app/audit.php';
+require __DIR__ . '/app/auth.php';
+require __DIR__ . '/app/settings.php';
+require __DIR__ . '/app/operations.php';
+require __DIR__ . '/app/admin/layout.php';
+require __DIR__ . '/app/admin/views.php';
 
-if (empty($_SESSION['admin_csrf'])) $_SESSION['admin_csrf'] = bin2hex(random_bytes(32));
-$error = '';
-$configuredHash = env_value('ADMIN_PASSWORD_HASH', '');
+auth_boot_session();
 
-if (isset($_GET['logout'])) {
-    unset($_SESSION['kynos_admin']);
-    header('Location: admin.php');
+header('X-Frame-Options: DENY');
+header('X-Content-Type-Options: nosniff');
+header('Cache-Control: no-store, private');
+header('Referrer-Policy: same-origin');
+
+/** Redirect back to a section after a POST (post/redirect/get). */
+function admin_redirect(string $view, ?string $query = ''): never
+{
+    $target = 'admin.php?view=' . rawurlencode($view);
+    if ($query !== '') {
+        $target .= '&' . $query;
+    }
+    header('Location: ' . $target);
     exit;
 }
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['password'])) {
-    if ($configuredHash && password_verify((string) $_POST['password'], $configuredHash)) {
-        session_regenerate_id(true);
-        $_SESSION['kynos_admin'] = true;
+
+try {
+    $accountCount = admin_user_count();
+} catch (Throwable $error) {
+    error_log('KYNOS admin database unavailable: ' . $error->getMessage());
+    view_migration_required();
+    exit;
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $action = (string) ($_POST['action'] ?? '');
+    if ($action === 'logout') {
+        try {
+            verify_csrf();
+        } catch (AuthException) {
+            admin_redirect('customers');
+        }
+        logout_user();
         header('Location: admin.php');
         exit;
     }
-    $error = 'The password is incorrect.';
+
+    try {
+        verify_csrf();
+
+        if ($action === 'bootstrap') {
+            if ($accountCount !== 0) {
+                view_message(403, 'Setup closed', 'Accounts already exist. Sign in instead.');
+                exit;
+            }
+            $password = (string) ($_POST['password'] ?? '');
+            $confirm = (string) ($_POST['password2'] ?? '');
+            if ($password !== $confirm) {
+                view_auth_screen('setup', 'The passwords do not match.');
+                exit;
+            }
+            $result = bootstrap_first_super_admin(
+                (string) ($_POST['name'] ?? ''),
+                (string) ($_POST['email'] ?? ''),
+                $password
+            );
+            if (!$result['ok']) {
+                view_auth_screen('setup', $result['error']);
+                exit;
+            }
+            admin_flash_set('ok', 'Super administrator account created. Sign in to continue.');
+            header('Location: admin.php');
+            exit;
+        }
+
+        if ($action === 'login') {
+            $outcome = attempt_login((string) ($_POST['email'] ?? ''), (string) ($_POST['password'] ?? ''));
+            if (!$outcome['ok']) {
+                view_auth_screen('login', $outcome['error']);
+                exit;
+            }
+            login_user($outcome['user']);
+            header('Location: admin.php');
+            exit;
+        }
+
+        $user = current_user();
+        if ($user === null) {
+            header('Location: admin.php');
+            exit;
+        }
+
+        switch ($action) {
+            case 'customer_status':
+                $result = customer_set_status(
+                    $user,
+                    (int) ($_POST['customer_id'] ?? 0),
+                    (string) ($_POST['status'] ?? '')
+                );
+                admin_flash_set($result['ok'] ? 'ok' : 'err', $result['ok'] ? 'Enquiry status updated.' : $result['error']);
+                admin_redirect('customers');
+                break;
+
+            case 'settings_content':
+                $input = [];
+                foreach (($_POST['content'] ?? []) as $key => $value) {
+                    $input[(string) $key] = (string) $value;
+                }
+                $packages = [
+                    1 => ['name' => (string) ($_POST['pkg_name'][1] ?? ''), 'price' => (string) ($_POST['pkg_price'][1] ?? ''), 'items' => array_filter(array_map('trim', explode("\n", (string) ($_POST['pkg_items'][1] ?? ''))))],
+                    2 => ['name' => (string) ($_POST['pkg_name'][2] ?? ''), 'price' => (string) ($_POST['pkg_price'][2] ?? ''), 'items' => array_filter(array_map('trim', explode("\n", (string) ($_POST['pkg_items'][2] ?? ''))))],
+                    3 => ['name' => (string) ($_POST['pkg_name'][3] ?? ''), 'price' => (string) ($_POST['pkg_price'][3] ?? ''), 'items' => array_filter(array_map('trim', explode("\n", (string) ($_POST['pkg_items'][3] ?? ''))))],
+                ];
+                $packagesJson = validate_packages_payload((string) json_encode($packages, JSON_UNESCAPED_UNICODE));
+                if ($packagesJson === null) {
+                    admin_flash_set('err', 'Check the packages: each needs a name like “Bronze”, a price like “GHC 39,000”, and 1 to 6 item lines.');
+                    admin_redirect('content');
+                }
+                $input['packages_json'] = $packagesJson;
+                $result = settings_save($user, $input);
+                admin_flash_set($result['ok'] ? 'ok' : 'err', $result['ok'] ? 'Site content saved.' : $result['error']);
+                admin_redirect('content');
+                break;
+
+            case 'settings_contact':
+                $input = [];
+                foreach (($_POST['contact'] ?? []) as $key => $value) {
+                    $input[(string) $key] = (string) $value;
+                }
+                $result = settings_save($user, $input);
+                admin_flash_set($result['ok'] ? 'ok' : 'err', $result['ok'] ? 'Contact settings saved.' : $result['error']);
+                admin_redirect('contact');
+                break;
+
+            case 'team_create':
+                $result = team_create_user(
+                    $user,
+                    (string) ($_POST['name'] ?? ''),
+                    (string) ($_POST['email'] ?? ''),
+                    (string) ($_POST['role'] ?? ''),
+                    (string) ($_POST['password'] ?? '')
+                );
+                admin_flash_set($result['ok'] ? 'ok' : 'err', $result['ok'] ? 'Account created.' : $result['error']);
+                admin_redirect('team');
+                break;
+
+            case 'team_role':
+                $result = team_set_role($user, (int) ($_POST['user_id'] ?? 0), (string) ($_POST['role'] ?? ''));
+                admin_flash_set($result['ok'] ? 'ok' : 'err', $result['ok'] ? 'Role updated.' : $result['error']);
+                admin_redirect('team');
+                break;
+
+            case 'team_toggle':
+                $result = team_set_active($user, (int) ($_POST['user_id'] ?? 0), (string) ($_POST['enable'] ?? '0') === '1');
+                admin_flash_set($result['ok'] ? 'ok' : 'err', $result['ok'] ? 'Account updated.' : $result['error']);
+                admin_redirect('team');
+                break;
+
+            case 'team_password':
+                $result = team_reset_password($user, (int) ($_POST['user_id'] ?? 0), (string) ($_POST['password'] ?? ''));
+                admin_flash_set($result['ok'] ? 'ok' : 'err', $result['ok'] ? 'Password updated.' : $result['error']);
+                admin_redirect('team');
+                break;
+
+            default:
+                view_message(404, 'Unknown action', 'That action is not recognised.');
+                exit;
+        }
+    } catch (AuthException $error) {
+        if ($error->status === 419) {
+            view_message(419, 'Session expired', 'Your session expired or the form was invalid. Refresh the page and try again.');
+            exit;
+        }
+        view_message(403, 'Not permitted', $error->getMessage());
+        exit;
+    }
 }
 
-$authenticated = !empty($_SESSION['kynos_admin']);
-if ($authenticated && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['assessment_id'], $_POST['status'])) {
-    if (!hash_equals($_SESSION['admin_csrf'], (string) ($_POST['csrf'] ?? ''))) {
-        http_response_code(419);
-        exit('Session expired.');
+// ----- GET ------------------------------------------------------------------
+
+$user = current_user();
+
+if ($user === null) {
+    if ($accountCount === 0) {
+        view_auth_screen('setup');
+    } else {
+        view_auth_screen('login');
     }
-    $allowed = ['new', 'contacted', 'quoted', 'won', 'closed'];
-    if (in_array($_POST['status'], $allowed, true)) {
-        $update = db()->prepare('UPDATE solar_assessments SET status = ? WHERE id = ?');
-        $update->execute([$_POST['status'], (int) $_POST['assessment_id']]);
-    }
-    header('Location: admin.php');
     exit;
 }
 
-$assessments = [];
-if ($authenticated) {
-    $assessments = db()->query('SELECT * FROM solar_assessments ORDER BY created_at DESC LIMIT 250')->fetchAll();
+$view = (string) ($_GET['view'] ?? 'customers');
+$navPermissions = [];
+foreach (admin_nav_items() as $item) {
+    $navPermissions[$item['view']] = $item['permission'];
 }
-function h(?string $value): string { return htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8'); }
-function whatsapp_number(string $phone): string
-{
-    $digits = preg_replace('/\D/', '', $phone);
-    return str_starts_with($digits, '0') ? '233' . substr($digits, 1) : $digits;
+
+try {
+    switch ($view) {
+        case 'customers':
+            view_customers($user, (string) ($_GET['status'] ?? ''), trim((string) ($_GET['q'] ?? '')));
+            break;
+        case 'content':
+            view_content($user);
+            break;
+        case 'contact':
+            view_contact($user);
+            break;
+        case 'team':
+            view_team($user);
+            break;
+        case 'audit':
+            view_audit($user, trim((string) ($_GET['action'] ?? '')));
+            break;
+        default:
+            view_message(404, 'Page not found', 'That administration page does not exist.');
+            break;
+    }
+} catch (AuthException $error) {
+    view_message(403, 'Not permitted', $error->getMessage());
+} catch (Throwable $error) {
+    error_log('KYNOS admin page failed: ' . $error->getMessage());
+    view_message(500, 'Something went wrong', 'The page could not be loaded. If this continues, contact the site maintainer.');
 }
-?>
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="robots" content="noindex,nofollow">
-  <title>KYNOS enquiries</title>
-  <script>tailwind.config={theme:{extend:{colors:{kynos:{navy:'#0B2A40',orange:'#F4581C',mist:'#F4F6F9'}}}}}</script>
-  <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="min-h-screen bg-slate-100 text-slate-800 antialiased">
-<?php if (!$authenticated): ?>
-  <main class="grid min-h-screen place-items-center px-5">
-    <form method="post" class="w-full max-w-sm border-t-4 border-kynos-orange bg-white p-8 shadow-xl">
-      <img src="images/logo.png" alt="KYNOS Solar Systems" class="mb-8 h-14 w-auto">
-      <h1 class="text-2xl font-extrabold text-kynos-navy">Enquiry dashboard</h1>
-      <p class="mt-2 text-sm text-slate-500">Sign in to review solar assessments.</p>
-      <?php if ($error): ?><p class="mt-5 rounded bg-red-50 p-3 text-sm font-semibold text-red-700"><?= h($error) ?></p><?php endif; ?>
-      <?php if (!$configuredHash): ?><p class="mt-5 rounded bg-amber-50 p-3 text-sm text-amber-800">Set ADMIN_PASSWORD_HASH in config.php before signing in.</p><?php endif; ?>
-      <label for="password" class="mt-6 block text-sm font-bold text-kynos-navy">Password</label>
-      <input id="password" name="password" type="password" required autocomplete="current-password" class="mt-2 w-full border border-slate-300 px-4 py-3 outline-none focus:border-kynos-orange focus:ring-2 focus:ring-orange-100">
-      <button class="mt-5 w-full bg-kynos-orange px-4 py-3 font-bold text-white hover:bg-orange-700 focus:outline-none focus:ring-4 focus:ring-orange-200">Sign in</button>
-    </form>
-  </main>
-<?php else: ?>
-  <header class="bg-kynos-navy text-white">
-    <div class="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-5">
-      <div><h1 class="text-xl font-extrabold">Solar assessments</h1><p class="text-sm text-slate-300"><?= count($assessments) ?> recent enquiries</p></div>
-      <a href="?logout=1" class="border border-white/40 px-4 py-2 text-sm font-bold hover:bg-white hover:text-kynos-navy">Sign out</a>
-    </div>
-  </header>
-  <main class="mx-auto max-w-7xl px-5 py-8">
-    <?php if (!$assessments): ?>
-      <div class="border border-dashed border-slate-300 bg-white p-12 text-center"><h2 class="font-bold text-kynos-navy">No assessments yet</h2><p class="mt-2 text-sm text-slate-500">New completed website assessments will appear here.</p></div>
-    <?php else: ?>
-      <div class="grid gap-5">
-      <?php foreach ($assessments as $lead): ?>
-        <article class="border-l-4 border-kynos-orange bg-white p-5 shadow-sm">
-          <div class="flex flex-col justify-between gap-4 md:flex-row">
-            <div>
-              <div class="flex flex-wrap items-center gap-3"><h2 class="text-lg font-extrabold text-kynos-navy"><?= h($lead['name']) ?></h2><span class="bg-slate-100 px-2 py-1 text-xs font-bold"><?= h($lead['status']) ?></span></div>
-              <p class="mt-1 text-sm text-slate-500"><?= h($lead['created_at']) ?> · <?= h($lead['location']) ?> · <?= h($lead['property_type']) ?></p>
-              <div class="mt-4 flex flex-wrap gap-2"><a class="bg-green-600 px-3 py-2 text-sm font-bold text-white" href="https://wa.me/<?= h(whatsapp_number($lead['phone'])) ?>" target="_blank" rel="noopener">WhatsApp</a><a class="border border-slate-300 px-3 py-2 text-sm font-bold" href="tel:<?= h($lead['phone']) ?>"><?= h($lead['phone']) ?></a><?php if ($lead['email']): ?><a class="border border-slate-300 px-3 py-2 text-sm font-bold" href="mailto:<?= h($lead['email']) ?>"><?= h($lead['email']) ?></a><?php endif; ?></div>
-            </div>
-            <form method="post" class="flex items-end gap-2">
-              <input type="hidden" name="csrf" value="<?= h($_SESSION['admin_csrf']) ?>"><input type="hidden" name="assessment_id" value="<?= (int) $lead['id'] ?>">
-              <label class="text-xs font-bold text-slate-500">Status<select name="status" class="mt-1 block border border-slate-300 px-3 py-2 text-sm text-slate-800"><?php foreach (['new','contacted','quoted','won','closed'] as $status): ?><option value="<?= $status ?>" <?= $lead['status'] === $status ? 'selected' : '' ?>><?= ucfirst($status) ?></option><?php endforeach; ?></select></label>
-              <button class="bg-kynos-navy px-3 py-2 text-sm font-bold text-white">Save</button>
-            </form>
-          </div>
-          <dl class="mt-5 grid grid-cols-2 gap-px bg-slate-200 sm:grid-cols-3 lg:grid-cols-6">
-            <?php foreach ([['Package',$lead['recommended_package']],['Load',$lead['running_load_w'].' W'],['Daily use',$lead['daily_energy_kwh'].' kWh'],['Inverter',$lead['inverter_kva'].' kVA'],['Battery',$lead['battery_kwh'].' kWh'],['Panels',$lead['panel_count']]] as $item): ?><div class="bg-slate-50 p-3"><dt class="text-xs text-slate-500"><?= h($item[0]) ?></dt><dd class="mt-1 font-bold text-kynos-navy"><?= h((string) $item[1]) ?></dd></div><?php endforeach; ?>
-          </dl>
-          <?php if ($lead['notes']): ?><p class="mt-4 text-sm"><strong>Notes:</strong> <?= h($lead['notes']) ?></p><?php endif; ?>
-        </article>
-      <?php endforeach; ?>
-      </div>
-    <?php endif; ?>
-  </main>
-<?php endif; ?>
-</body>
-</html>

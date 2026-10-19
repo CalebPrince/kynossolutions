@@ -1,10 +1,34 @@
 <?php
 declare(strict_types=1);
 session_start();
+require __DIR__ . '/app/site-data.php';
 if (empty($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 }
 $csrfToken = $_SESSION['csrf_token'];
+$phoneDisplay = setting('phone');
+$phoneIntl = phone_to_intl($phoneDisplay);
+$whatsappNumber = phone_to_intl(setting('whatsapp'));
+$packagesFrom = setting_packages_from();
+$sitePackages = solar_packages();
+$packageTierClasses = ['tier-bronze', 'tier-silver', 'tier-gold'];
+$packageLimits = [
+    ['maxKva' => 4.2, 'maxBatteryKwh' => 2.4, 'maxPanels' => 5],
+    ['maxKva' => 6, 'maxBatteryKwh' => 5.12, 'maxPanels' => 6],
+    ['maxKva' => 6, 'maxBatteryKwh' => 10.24, 'maxPanels' => 10],
+];
+$jsPackages = [];
+foreach ($sitePackages as $index => $package) {
+    $limit = $packageLimits[$index] ?? $packageLimits[count($packageLimits) - 1];
+    $jsPackages[] = [
+        'name' => $package['name'] . ' Package',
+        'price' => $package['price'],
+        'maxKva' => $limit['maxKva'],
+        'maxBatteryKwh' => $limit['maxBatteryKwh'],
+        'maxPanels' => $limit['maxPanels'],
+    ];
+}
+$socialLinks = site_social_links();
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -418,6 +442,9 @@ $csrfToken = $_SESSION['csrf_token'];
   <symbol id="i-fb" viewBox="0 0 24 24"><path fill="currentColor" stroke="none" d="M12 2a10 10 0 0 0-1.600 19.900v-7H7.900V12h2.500V9.800c0-2.500 1.500-3.900 3.800-3.900 1.100 0 2.200.2 2.200.2v2.500h-1.200c-1.200 0-1.600.8-1.600 1.600V12h2.800l-.4 2.900h-2.400v7A10 10 0 0 0 12 2z"/></symbol>
   <symbol id="i-ig" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><path d="M17.500 6.500h.01" stroke-width="2.600"/></symbol>
   <symbol id="i-yt" viewBox="0 0 24 24"><path fill="currentColor" stroke="none" fill-rule="evenodd" d="M4.500 5h15A2.500 2.500 0 0 1 22 7.500v9a2.500 2.500 0 0 1-2.500 2.500h-15A2.500 2.500 0 0 1 2 16.500v-9A2.500 2.500 0 0 1 4.500 5zM10 8.500v7l6-3.500z"/></symbol>
+  <symbol id="i-xcom" viewBox="0 0 24 24"><path fill="currentColor" stroke="none" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></symbol>
+  <symbol id="i-li" viewBox="0 0 24 24"><path fill="currentColor" stroke="none" d="M4.98 3.5C4.98 4.88 3.87 6 2.5 6S.1 4.88.1 3.5 1.22 1 2.6 1s2.38 1.12 2.38 2.5zM.4 8h4.2v15.5H.4V8zm7.6 0h4v2.1h.06c.56-1.06 1.92-2.18 3.96-2.18 4.23 0 5.01 2.78 5.01 6.4v9.18h-4.2v-8.14c0-1.94-.04-4.44-2.7-4.44-2.7 0-3.12 2.11-3.12 4.3V23.5H8V8z"/></symbol>
+  <symbol id="i-tt" viewBox="0 0 24 24"><path fill="currentColor" stroke="none" d="M16.6 5.82A4.28 4.28 0 0 1 15.54 3h-3.09v12.4a2.59 2.59 0 1 1-2.59-2.59c.27 0 .53.04.78.12v-3.16a5.75 5.75 0 0 0-.78-.05 5.69 5.69 0 1 0 5.69 5.69V9.01a7.35 7.35 0 0 0 4.3 1.38V7.3s-1.88.09-3.24-1.48z"/></symbol>
 </svg>
 
 <header class="site-header">
@@ -453,8 +480,8 @@ $csrfToken = $_SESSION['csrf_token'];
   <div class="drawer-actions">
     <a class="btn btn-wa" data-wa="Hello KYNOS Solar Systems, I would like a quote for a solar system." href="#contact"><svg class="ico wa"><use href="#i-wa"/></svg>Get a Quote</a>
     <button class="btn btn-primary" type="button" data-open-assessment>Start Load Assessment <svg class="ico"><use href="#i-arrow"/></svg></button>
-    <a class="btn btn-outline" href="tel:+233530409118"><svg class="ico" style="font-size:18px"><use href="#i-phone"/></svg>Call 053 040 9118</a>
-    <p>Solar packages from GHC 39,000</p>
+    <a class="btn btn-outline" href="tel:+<?= htmlspecialchars($phoneIntl, ENT_QUOTES, 'UTF-8') ?>"><svg class="ico" style="font-size:18px"><use href="#i-phone"/></svg>Call <?= htmlspecialchars($phoneDisplay, ENT_QUOTES, 'UTF-8') ?></a>
+    <p>Solar packages from <?= htmlspecialchars($packagesFrom, ENT_QUOTES, 'UTF-8') ?></p>
   </div>
 </aside>
 
@@ -464,9 +491,9 @@ $csrfToken = $_SESSION['csrf_token'];
       <div class="hero-copy">
         <p class="eyebrow">CLEAN ENERGY. LOWER BILLS. A BRIGHTER TOMORROW.</p>
         <h1><span class="l1">AFFORDABLE</span><span class="l2">SOLAR</span><span class="l3">SOLUTIONS FOR EVERYONE</span></h1>
-        <p>Say goodbye to sky-high electricity bills and hello to clean, reliable energy with KYNOS SOLAR SYSTEMS. We provide premium solar solutions for homes, offices and businesses.</p>
+        <p><?= htmlspecialchars(setting('page_home_hero_intro'), ENT_QUOTES, 'UTF-8') ?></p>
         <div class="hero-actions">
-          <a class="btn btn-wa" data-wa="Hello KYNOS Solar Systems, I am interested in a solar package from GHC 39,000." href="#package"><svg class="ico wa"><use href="#i-wa"/></svg><span>Get a Solar Package<br>from GHC 39,000</span><svg class="ico"><use href="#i-arrow"/></svg></a>
+          <a class="btn btn-wa" data-wa="Hello KYNOS Solar Systems, I am interested in a solar package from <?= htmlspecialchars($packagesFrom, ENT_QUOTES, 'UTF-8') ?>." href="#package"><svg class="ico wa"><use href="#i-wa"/></svg><span>Get a Solar Package<br>from <?= htmlspecialchars($packagesFrom, ENT_QUOTES, 'UTF-8') ?></span><svg class="ico"><use href="#i-arrow"/></svg></a>
           <button class="btn btn-outline" type="button" data-open-assessment>Request a Free Assessment <svg class="ico"><use href="#i-arrow"/></svg></button>
         </div>
       </div>
@@ -489,7 +516,7 @@ $csrfToken = $_SESSION['csrf_token'];
       <div class="section-head">
         <div>
           <h2>Our <span class="accent">Solutions</span></h2>
-          <p>Everything you need to go solar: high quality products, professional installation and ongoing support.</p>
+          <p><?= htmlspecialchars(setting('page_home_solutions_intro'), ENT_QUOTES, 'UTF-8') ?></p>
         </div>
         <a class="btn btn-outline btn-sm" href="solutions.php">View All Solutions <svg class="ico"><use href="#i-arrow"/></svg></a>
       </div>
@@ -527,7 +554,7 @@ $csrfToken = $_SESSION['csrf_token'];
       <div class="section-head">
         <div>
           <h2>Why Choose <span class="accent">KYNOS?</span></h2>
-          <p>We are committed to providing reliable, affordable and long-lasting solar solutions for homes, offices and businesses.</p>
+          <p><?= htmlspecialchars(setting('page_home_why_intro'), ENT_QUOTES, 'UTF-8') ?></p>
         </div>
       </div>
       <div class="why">
@@ -544,9 +571,9 @@ $csrfToken = $_SESSION['csrf_token'];
     <div class="wrap">
       <div class="section-head"><div><h2>Choose a package that fits you</h2><p>Three reliable solar packages for Ghanaian homes and businesses.</p></div></div>
       <div class="pricing-grid">
-        <article class="tier tier-bronze"><div class="tier-head"><h3>Bronze</h3><p class="price">GHC 39,000</p></div><ul><li><svg class="ico"><use href="#i-check"/></svg>5 × 620W solar panels</li><li><svg class="ico"><use href="#i-check"/></svg>1 × 24V 100Ah lithium battery</li><li><svg class="ico"><use href="#i-check"/></svg>1 × 4.2kW hybrid inverter</li></ul><a class="btn" data-wa="Hello KYNOS Solar Systems, I would like the Bronze Package (GHC 39,000)." href="#contact">Choose Bronze</a></article>
-        <article class="tier tier-silver"><div class="tier-head"><h3>Silver</h3><p class="price">GHC 55,400</p></div><ul><li><svg class="ico"><use href="#i-check"/></svg>6 × 620W solar panels</li><li><svg class="ico"><use href="#i-check"/></svg>1 × 5.12kWh lithium battery</li><li><svg class="ico"><use href="#i-check"/></svg>1 × 6kW hybrid inverter</li></ul><a class="btn" data-wa="Hello KYNOS Solar Systems, I would like the Silver Package (GHC 55,400)." href="#contact">Choose Silver</a></article>
-        <article class="tier tier-gold"><div class="tier-head"><h3>Gold</h3><p class="price">GHC 82,000</p></div><ul><li><svg class="ico"><use href="#i-check"/></svg>10 × 620W solar panels</li><li><svg class="ico"><use href="#i-check"/></svg>1 × 10.24kWh lithium battery</li><li><svg class="ico"><use href="#i-check"/></svg>1 × 6kW hybrid inverter</li></ul><a class="btn" data-wa="Hello KYNOS Solar Systems, I would like the Gold Package (GHC 82,000)." href="#contact">Choose Gold</a></article>
+        <?php foreach ($sitePackages as $index => $package): $tierClass = $packageTierClasses[$index] ?? 'tier-gold'; ?>
+        <article class="tier <?= $tierClass ?>"><div class="tier-head"><h3><?= htmlspecialchars($package['name'], ENT_QUOTES, 'UTF-8') ?></h3><p class="price"><?= htmlspecialchars($package['price'], ENT_QUOTES, 'UTF-8') ?></p></div><ul><?php foreach ($package['items'] as $item): ?><li><svg class="ico"><use href="#i-check"/></svg><?= htmlspecialchars($item, ENT_QUOTES, 'UTF-8') ?></li><?php endforeach; ?></ul><a class="btn" data-wa="Hello KYNOS Solar Systems, I would like the <?= htmlspecialchars($package['name'], ENT_QUOTES, 'UTF-8') ?> Package (<?= htmlspecialchars($package['price'], ENT_QUOTES, 'UTF-8') ?>)." href="#contact">Choose <?= htmlspecialchars($package['name'], ENT_QUOTES, 'UTF-8') ?></a></article>
+        <?php endforeach; ?>
       </div>
     </div>
   </section>
@@ -575,7 +602,7 @@ $csrfToken = $_SESSION['csrf_token'];
       <div class="section-head">
         <div>
           <h2>Recent <span class="accent">Projects</span></h2>
-          <p>Take a look at some of our recent solar installations for homes, offices and businesses.</p>
+          <p><?= htmlspecialchars(setting('page_home_projects_intro'), ENT_QUOTES, 'UTF-8') ?></p>
         </div>
         <a class="btn btn-outline btn-sm" href="projects.php">View All Projects <svg class="ico"><use href="#i-arrow"/></svg></a>
       </div>
@@ -591,12 +618,12 @@ $csrfToken = $_SESSION['csrf_token'];
   <section class="cta" id="contact">
     <div class="wrap">
       <div>
-        <h2>Ready to Go Solar?</h2>
-        <p>Contact us today for a free assessment and get the right solar solution for your home, office or business.</p>
+        <h2><?= htmlspecialchars(setting('page_home_cta_heading'), ENT_QUOTES, 'UTF-8') ?></h2>
+        <p><?= htmlspecialchars(setting('page_home_cta_text'), ENT_QUOTES, 'UTF-8') ?></p>
       </div>
       <div class="cta-actions">
         <a class="btn btn-wa" data-wa="Hello KYNOS Solar Systems, I am ready to go solar. Please get in touch." href="#contact"><svg class="ico wa"><use href="#i-wa"/></svg>Chat on WhatsApp</a>
-        <a class="btn btn-ghost" href="tel:+233530409118"><svg class="ico" style="font-size:20px"><use href="#i-phone"/></svg>Call 053 040 9118</a>
+        <a class="btn btn-ghost" href="tel:+<?= htmlspecialchars($phoneIntl, ENT_QUOTES, 'UTF-8') ?>"><svg class="ico" style="font-size:20px"><use href="#i-phone"/></svg>Call <?= htmlspecialchars($phoneDisplay, ENT_QUOTES, 'UTF-8') ?></a>
       </div>
     </div>
   </section>
@@ -605,6 +632,7 @@ $csrfToken = $_SESSION['csrf_token'];
 <footer class="site-footer">
   <div class="wrap cols">
     <a class="brand" href="index.php"><img src="images/logo.png" alt="KYNOS Solar Systems, Powering Your Future Sustainably" loading="lazy"></a>
+    <p class="muted" style="font-size:13px;color:var(--muted);margin-top:10px"><?= htmlspecialchars(setting('footer_blurb'), ENT_QUOTES, 'UTF-8') ?></p>
     <div>
       <h4>Quick Links</h4>
       <ul>
@@ -630,15 +658,17 @@ $csrfToken = $_SESSION['csrf_token'];
     <div>
       <h4>Contact Us</h4>
       <ul class="contact-list">
-        <li><svg class="ico"><use href="#i-pin"/></svg>Accra, Ghana</li>
-        <li><svg class="ico"><use href="#i-phone"/></svg><a href="tel:+233530409118">053 040 9118</a></li>
-        <li><svg class="ico"><use href="#i-mail"/></svg><a href="mailto:info@kynossolutions.com">info@kynossolutions.com</a></li>
+        <li><svg class="ico"><use href="#i-pin"/></svg><?= htmlspecialchars(site_address(), ENT_QUOTES, 'UTF-8') ?></li>
+        <li><svg class="ico"><use href="#i-phone"/></svg><a href="tel:+<?= htmlspecialchars($phoneIntl, ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars($phoneDisplay, ENT_QUOTES, 'UTF-8') ?></a></li>
+        <li><svg class="ico"><use href="#i-mail"/></svg><a href="mailto:<?= htmlspecialchars(site_email(), ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars(site_email(), ENT_QUOTES, 'UTF-8') ?></a></li>
       </ul>
+      <?php if ($socialLinks): ?>
       <div class="socials">
-        <a href="#" aria-label="Facebook"><svg class="ico"><use href="#i-fb"/></svg></a>
-        <a href="#" aria-label="Instagram"><svg class="ico"><use href="#i-ig"/></svg></a>
-        <a href="#" aria-label="YouTube"><svg class="ico"><use href="#i-yt"/></svg></a>
+        <?php foreach ($socialLinks as $link): ?>
+        <a href="<?= htmlspecialchars($link['href'], ENT_QUOTES, 'UTF-8') ?>" target="_blank" rel="noopener" aria-label="<?= htmlspecialchars($link['label'], ENT_QUOTES, 'UTF-8') ?>"><svg class="ico"><use href="#<?= htmlspecialchars($link['icon'], ENT_QUOTES, 'UTF-8') ?>"/></svg></a>
+        <?php endforeach; ?>
       </div>
+      <?php endif; ?>
     </div>
   </div>
   <div class="legal">
@@ -732,10 +762,12 @@ $csrfToken = $_SESSION['csrf_token'];
 (function () {
   "use strict";
 
-  /* ---- Business settings: edit these to match real stock and pricing ---- */
+  /* ---- Business settings ----
+     Contact numbers and package names/prices come from the admin dashboard.
+     The sizing limits below stay in code because they drive the calculator. */
   var CONFIG = {
-    whatsapp: "233530409118",
-    phoneDisplay: "053 040 9118",
+    whatsapp: <?= json_encode($whatsappNumber) ?>,
+    phoneDisplay: <?= json_encode($phoneDisplay) ?>,
     sunHours: 4.5,          // average peak sun hours per day in Ghana
     systemLoss: 0.75,       // panel-to-socket efficiency
     panelWatts: 620,
@@ -743,11 +775,7 @@ $csrfToken = $_SESSION['csrf_token'];
     inverterSizes: [1.5, 3, 4.2, 6, 8, 10, 12, 16, 20],
     // share of daily energy the battery must carry, per usage mode
     batteryShare: { backup: 0.35, hybrid: 0.5, offgrid: 1 },
-    packages: [
-      { name: "Bronze Package", price: "GHC 39,000", maxKva: 4.2, maxBatteryKwh: 2.4, maxPanels: 5 },
-      { name: "Silver Package", price: "GHC 55,400", maxKva: 6, maxBatteryKwh: 5.12, maxPanels: 6 },
-      { name: "Gold Package", price: "GHC 82,000", maxKva: 6, maxBatteryKwh: 10.24, maxPanels: 10 }
-    ]
+    packages: <?= json_encode($jsPackages, JSON_UNESCAPED_SLASHES) ?>
   };
   var leadSaved = false;
 

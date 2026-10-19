@@ -1,0 +1,105 @@
+schema_version: "2.3"
+baseline_version: "1.0.0"
+record_digest: "4f2d9eb73a4a04c403ac2372641057cceb146e4e810145f86dcd8db73d5a4f2b"
+project:
+  id: "PRJ-KYNOS-ADMIN"
+  name: "KYNOS website administration"
+  purpose: "Allow authorized KYNOS personnel to manage enquiries, staff access and public website content."
+  owner: "KYNOS owner"
+  intake:
+    constraint: {statement: "Website contact details, content and enquiries cannot be safely managed by multiple accountable staff members.", evidence: "Current production admin uses one shared password and hard-coded public content."}
+    forces: {push: "Content changes require code edits and deployment.", pull: "One controlled admin workspace for routine operations.", anxiety: "An unauthorized or mistaken edit could expose customer data or alter public contact details.", habit: "The owner currently relies on developer changes and a shared admin password."}
+    existing_assets: ["PHP 8 application", "MySQL assessments table", "Namecheap cPanel hosting", "GitHub FTPS deployment", "server-only config.php"]
+    bet: {belief: "Role-scoped administration will reduce developer dependence without exposing unrestricted control.", wager: "Add database-backed users, permissions, settings, content and audit records.", expected_outcome: "Authorized staff can manage assigned work while sensitive actions remain restricted and attributable.", leading_indicator: "Routine content and enquiry updates are completed through named accounts with audit entries."}
+    outcomes: ["Every administrator uses an individual account.", "Only permitted roles can change public content or staff access.", "Customer enquiries and site settings are manageable without code changes."]
+    rejected_options: [{option: "Continue one shared password", reason: "No individual accountability, revocation or least privilege."}, {option: "Give every staff member full access", reason: "Unnecessary privilege increases the impact of error or compromise."}]
+  regulatory_context:
+    - {regime: "Ghana Data Protection Act, 2012 (Act 843)", status: "NOT_ASSESSED", notes: "Customer contact data is processed; owner should confirm duties with qualified counsel."}
+risk:
+  tier: "MEDIUM"
+  mode: "STANDARD"
+  rationale: ["Internet-facing authentication", "customer contact data", "multi-user administration", "public content publishing"]
+  likely_production_tier: null
+  assurance: {asvs_level: "L2", slsa_build_level: 1, slsa_source_level: 1, deviation_reason: "Repository settings do not yet evidence protected history required for source level 2."}
+lifecycle: {status: "APPROVED", production_posture: "ELIGIBLE_WHEN_APPROVED", spike_expires_at: null, development_lock: "UNLOCKED", deployment_lock: "UNLOCKED"}
+classification_levels: [PUBLIC, INTERNAL, CONFIDENTIAL, SENSITIVE, RESTRICTED]
+assets:
+  - {id: "AST-001", name: "Customer enquiries", classification: "CONFIDENTIAL", owner: "KYNOS owner", retention: "Until operationally closed; deletion policy to be confirmed"}
+  - {id: "AST-002", name: "Administrator credentials", classification: "RESTRICTED", owner: "KYNOS owner", retention: "Account lifetime plus audit retention"}
+  - {id: "AST-003", name: "Public site settings and content", classification: "INTERNAL", owner: "KYNOS owner", retention: "Current value plus audit history"}
+components:
+  - {id: "CMP-001", name: "Public PHP website", exposure: "INTERNET", provider: "Namecheap", ai_capability: false}
+  - {id: "CMP-002", name: "Admin PHP application", exposure: "INTERNET", provider: "Namecheap", ai_capability: false}
+  - {id: "CMP-003", name: "MySQL database", exposure: "PRIVATE", provider: "Namecheap", ai_capability: false}
+  - {id: "CMP-004", name: "GitHub deployment workflow", exposure: "THIRD_PARTY", provider: "GitHub", ai_capability: false}
+trust_boundaries:
+  - {id: "TB-001", name: "Internet to PHP application", from: "PUBLIC_INTERNET", to: ["CMP-001", "CMP-002"]}
+  - {id: "TB-002", name: "PHP application to database", from: "CMP-001", to: ["CMP-003"]}
+  - {id: "TB-003", name: "GitHub to Namecheap", from: "CMP-004", to: ["CMP-001", "CMP-002"]}
+data_flows:
+  - {id: "FLW-001", name: "Administrator sign-in", origin: "Administrator browser", processing: "Throttle, verify password hash, rotate session", destination: "CMP-002 and CMP-003", classification: "RESTRICTED", retention: "Session lifetime and audit event", boundaries: ["TB-001", "TB-002"]}
+  - {id: "FLW-002", name: "Manage enquiry", origin: "Authorized staff browser", processing: "Authorize, validate, update and audit", destination: "CMP-003", classification: "CONFIDENTIAL", retention: "Operational lifetime", boundaries: ["TB-001", "TB-002"]}
+  - {id: "FLW-003", name: "Publish site settings", origin: "Authorized administrator browser", processing: "Authorize, allowlist, validate and audit", destination: "CMP-003 and public rendering", classification: "INTERNAL", retention: "Current value and audit history", boundaries: ["TB-001", "TB-002"]}
+identities:
+  - {id: "ID-001", name: "Super administrator", type: "HUMAN", authentication: "Individual email and password", resources: ["CMP-002", "CMP-003"], permissions: ["manage users and roles", "manage customers", "publish content and settings", "view audit log"], forbidden_actions: ["remove or demote final super administrator"], human_approval: "Owner approval embodied in this baseline"}
+  - {id: "ID-002", name: "Administrator", type: "HUMAN", authentication: "Individual email and password", resources: ["CMP-002", "CMP-003"], permissions: ["manage customers", "publish content and settings"], forbidden_actions: ["manage users", "assign roles", "change super administrators"], human_approval: "Created by super administrator"}
+  - {id: "ID-003", name: "Staff", type: "HUMAN", authentication: "Individual email and password", resources: ["CMP-002", "CMP-003"], permissions: ["view customers", "update enquiry status"], forbidden_actions: ["manage users", "publish content", "change settings"], human_approval: "Created by super administrator"}
+  - {id: "ID-004", name: "Deployment workflow", type: "WORKLOAD", authentication: "GitHub environment FTP secrets", resources: ["CMP-001", "CMP-002"], permissions: ["upload approved release files"], forbidden_actions: ["read database", "read config.php"], human_approval: "Push to main"}
+threats:
+  - {id: "THR-001", component_ids: ["CMP-002"], scenario: "Stolen or guessed credentials allow unauthorized administration.", likelihood: "MEDIUM", impact: "HIGH", control_ids: ["CTL-AUTH-001", "CTL-SESSION-001", "CTL-CRYPTO-001", "CTL-LOG-001"], refs: [], residual_risk: "MEDIUM", owner: "KYNOS owner", status: "OPEN"}
+  - {id: "THR-002", component_ids: ["CMP-002", "CMP-003"], scenario: "A lower-privileged user performs a super-admin or publishing action.", likelihood: "MEDIUM", impact: "HIGH", control_ids: ["CTL-AUTHZ-001", "CTL-API-001", "CTL-INPUT-001", "CTL-ERR-001"], refs: [], residual_risk: "LOW", owner: "Developer", status: "OPEN"}
+  - {id: "THR-003", component_ids: ["CMP-001", "CMP-002", "CMP-004"], scenario: "Malicious content, exposed secrets or an unsafe deployment compromises customers or the public site.", likelihood: "MEDIUM", impact: "HIGH", control_ids: ["CTL-FRONT-001", "CTL-SECRET-001", "CTL-CONFIG-001", "CTL-DATA-001", "CTL-SC-001", "CTL-DEPLOY-001", "CTL-GOV-001"], refs: [], residual_risk: "MEDIUM", owner: "Developer", status: "OPEN"}
+controls:
+  - {id: "CTL-AUTH-001", domain: "AUTH", requirement: "Named accounts, modern password hashes, throttled login and no shared credentials.", status: "PLANNED", owner: "Developer", acceptance: "Tests show valid login, invalid denial, throttling and disabled-account denial.", refs: [], evidence_ids: []}
+  - {id: "CTL-AUTHZ-001", domain: "AUTHZ", requirement: "Default-deny server authorization enforces the approved super_admin, admin and staff matrix on every mutation.", status: "PLANNED", owner: "Developer", acceptance: "Role tests deny every forbidden action, including direct POST requests.", refs: [], evidence_ids: []}
+  - {id: "CTL-SESSION-001", domain: "SESSION", requirement: "Rotate sessions at login, use secure HttpOnly SameSite cookies, inactivity expiry, logout revocation and CSRF on mutations.", status: "PLANNED", owner: "Developer", acceptance: "Session and CSRF tests pass over HTTPS.", refs: [], evidence_ids: []}
+  - {id: "CTL-INPUT-001", domain: "INPUT", requirement: "Allowlist settings, validate lengths/types/URLs server-side, use prepared statements and encode output.", status: "PLANNED", owner: "Developer", acceptance: "Injection and stored-XSS payloads are rejected or rendered inert.", refs: [], evidence_ids: []}
+  - {id: "CTL-API-001", domain: "API", requirement: "Mutation handlers bind only explicit fields and require authentication, permission and CSRF checks.", status: "PLANNED", owner: "Developer", acceptance: "Mass-assignment and replay attempts do not change unauthorized fields.", refs: [], evidence_ids: []}
+  - {id: "CTL-FRONT-001", domain: "FRONTEND", requirement: "No secrets in client code; safe output encoding and security headers protect admin and public pages.", status: "PLANNED", owner: "Developer", acceptance: "Manual inspection and response-header checks show the approved controls.", refs: [], evidence_ids: []}
+  - {id: "CTL-CRYPTO-001", domain: "CRYPTO", requirement: "Use PHP password_hash/password_verify, random_bytes tokens and HTTPS transport.", status: "PLANNED", owner: "Developer", acceptance: "Stored credentials are one-way hashes and production is HTTPS-only.", refs: [], evidence_ids: []}
+  - {id: "CTL-SECRET-001", domain: "SECRETS", requirement: "Database and bootstrap secrets remain in server-only config.php or GitHub environment secrets and never logs or source.", status: "IMPLEMENTED", owner: "KYNOS owner", acceptance: "Repository and release inspection contain no production secrets.", refs: [], evidence_ids: []}
+  - {id: "CTL-CONFIG-001", domain: "CONFIG", requirement: "Production disables verbose errors, blocks private files and fails closed when configuration is incomplete.", status: "PLANNED", owner: "Developer", acceptance: "Direct requests for private files are denied and missing config exposes no secret detail.", refs: [], evidence_ids: []}
+  - {id: "CTL-DATA-001", domain: "DATA", requirement: "Collect only operational customer fields; restrict access by role; document retention and deletion.", status: "PLANNED", owner: "KYNOS owner", acceptance: "Data inventory, access tests and owner-approved retention are recorded.", refs: [], evidence_ids: []}
+  - {id: "CTL-ERR-001", domain: "ERROR_HANDLING", requirement: "Authorization, database and validation failures fail closed with non-sensitive messages.", status: "PLANNED", owner: "Developer", acceptance: "Failure tests expose no stack traces, SQL or credentials.", refs: [], evidence_ids: []}
+  - {id: "CTL-LOG-001", domain: "LOGGING", requirement: "Audit authentication, user, role, customer, content and settings changes without passwords or session tokens.", status: "PLANNED", owner: "Developer", acceptance: "Each sensitive action creates an attributable audit record.", refs: [], evidence_ids: []}
+  - {id: "CTL-SC-001", domain: "SUPPLY_CHAIN", requirement: "Pin third-party CI actions and review externally loaded admin dependencies.", status: "PLANNED", owner: "Developer", acceptance: "Workflow actions are commit-pinned and dependency review is recorded.", refs: [], evidence_ids: []}
+  - {id: "CTL-DEPLOY-001", domain: "DEPLOY", requirement: "Deploy only from main through scoped FTPS secrets; exclude config.php and verify protected routes.", status: "IMPLEMENTED", owner: "Developer", acceptance: "Deployment checks confirm live routes and private configuration exclusion.", refs: [], evidence_ids: []}
+  - {id: "CTL-GOV-001", domain: "GOVERNANCE", requirement: "Material authentication, authorization or data-boundary changes require owner approval of a revised baseline.", status: "IMPLEMENTED", owner: "KYNOS owner", acceptance: "Approval is recorded with version and scope before implementation.", refs: [], evidence_ids: ["EVD-001"]}
+gates:
+  - {id: "GATE-001", name: "Owner baseline approval", stage: "PRE_IMPLEMENTATION", blocking: true, control_ids: ["CTL-GOV-001"], required_evidence: ["EVD-001"], status: "VERIFIED", evidence_ids: ["EVD-001"]}
+  - {id: "GATE-002", name: "Authorization and migration tests", stage: "PRE_DEPLOY", blocking: true, control_ids: ["CTL-AUTH-001", "CTL-AUTHZ-001", "CTL-SESSION-001", "CTL-INPUT-001"], required_evidence: ["EVD-002"], status: "NOT_YET_BUILT", evidence_ids: []}
+  - {id: "GATE-003", name: "Production route verification", stage: "DEPLOY", blocking: true, control_ids: ["CTL-DEPLOY-001", "CTL-CONFIG-001"], required_evidence: ["EVD-003"], status: "CONFIGURED", evidence_ids: []}
+decisions:
+  - {id: "DEC-001", question: "Which role model controls administration?", owner: "KYNOS owner", required_decision: "super_admin, admin and staff matrix", blocks_approval: true, status: "DECIDED"}
+evidence:
+  - {id: "EVD-001", type: "OWNER_APPROVAL", status: "PASSED", observed_at: "2026-10-19T22:30:00Z", observer: "KYNOS owner", location: "Conversation approval: I approve security baseline v1.0.0"}
+  - {id: "EVD-002", type: "TEST_RESULT", status: "NOT_YET_BUILT", observed_at: null, observer: null, location: null}
+  - {id: "EVD-003", type: "CI_RUN", status: "NOT_YET_BUILT", observed_at: null, observer: null, location: null}
+monitoring:
+  handoff: {provider: "NONE", owner: "KYNOS owner", configuration_status: "PLANNED", baseline_version: "1.0.0", record_digest: null, environments: ["production"], handed_off_at: null, acknowledged_at: null}
+  signals:
+    - {id: "MON-001", name: "Repeated login failures", source: "admin audit log", severity: "MEDIUM", threshold: "Five failures for one account or IP within fifteen minutes", route: "KYNOS owner", runbook: "SECURITY.md#monitoring-and-response", status: "PLANNED", evidence_ids: []}
+recovery:
+  owner: "KYNOS owner"
+  backup: {status: "PLANNED", details: "Use cPanel database backups before migrations and on the hosting schedule."}
+  restore: {status: "PLANNED", details: "Restore database backup and redeploy the matching Git commit."}
+  rollback: {status: "PLANNED", details: "Revert main to the prior release and rerun deployment."}
+  incident_response: {status: "PLANNED", details: "Disable affected accounts, rotate credentials, preserve audit records and restore known-good code/data."}
+supply_chain:
+  sbom: {required: false, format: "NONE", status: "NOT_APPLICABLE", reason: "No PHP package dependencies; pinned CI actions and repository inventory provide the small dependency record."}
+  provenance: {status: "PLANNED", details: "Git commit and GitHub Actions run identify each release."}
+  dependency_policy: {lockfile_required: false, update_automation: "Manual review of pinned GitHub Actions and Tailwind browser dependency", vulnerability_gate_severity: "HIGH"}
+  vulnerability_management: {status: "PLANNED", remediation_sla_days: 14, disclosure: "Report privately to the KYNOS owner or website maintainer.", support_policy: "Security fixes supported while the website is in production.", monitoring_sources: "GitHub advisories, action release notices and owner reports.", triage_method: "Prioritize by exploitability, privilege impact and customer-data exposure.", root_cause_practice: "", details: "Critical exposed issues are handled immediately."}
+capabilities: {handles_files: false, uses_self_contained_tokens: false, uses_federated_login: false}
+source: {repository: "https://github.com/CalebPrince/kynossolutions", protected_branch: false, history_protected: false, required_checks: [], review_policy: "NONE"}
+engineering:
+  toolchain_security: {status: "PLANNED", practice: "Commit-pin GitHub actions and keep FTP credentials in the protected production environment."}
+  dev_environment: {status: "PLANNED", practice: "Keep production config out of source and use non-secret local fixtures."}
+  secure_coding: {status: "PLANNED", practice: "Prepared statements, output encoding, allowlist validation and default-deny authorization."}
+  code_review: {status: "PLANNED", practice: "Review authentication, authorization, migrations and public rendering diffs before deployment."}
+  security_testing: {status: "PLANNED", practice: "Exercise login abuse, CSRF, role denial, injection and session behavior before production."}
+  release_archive: {status: "IMPLEMENTED", practice: "Git history and GitHub Actions retain commit-linked release records."}
+  data_integrity: {status: "PLANNED", practice: "Use explicit fields, transactions for privileged mutations and append-only audit entries."}
+  vulnerability_class_reduction: {status: "PLANNED", practice: "Centralize auth, authorization, CSRF, validation and settings access helpers."}
+approval: {decision: "APPROVED", approver: "KYNOS owner", approved_at: "2026-10-19T22:30:00Z", baseline_version: "1.0.0", record_digest: "4f2d9eb73a4a04c403ac2372641057cceb146e4e810145f86dcd8db73d5a4f2b", scope: ["development", "production:kynossolutions.com"], expires_at: null}
+changes: []
