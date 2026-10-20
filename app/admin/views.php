@@ -123,6 +123,102 @@ a{color:#F4581C;font-weight:700}
 <?php
 }
 
+function view_dashboard(array $user): void
+{
+    assert_permission($user, 'customers.view');
+    $canCustomers = user_can($user, 'customers.view');
+    $counts = $canCustomers ? customer_status_counts() : null;
+    $recent = $canCustomers ? customer_list('', '', 5) : [];
+    $openCount = $counts !== null ? $counts['new'] + $counts['contacted'] + $counts['quoted'] : 0;
+    $teamCount = user_can($user, 'users.manage') ? count(team_list()) : null;
+    $events = user_can($user, 'audit.view') ? audit_recent(8) : [];
+    admin_page_start('Dashboard', 'dashboard', $user);
+    ?>
+    <div class="page-head">
+      <div><h1>Dashboard</h1><p>Welcome back, <?= admin_h((string) $user['name']) ?>. Here is the current state of the KYNOS admin.</p></div>
+    </div>
+
+    <?php if ($counts !== null): ?>
+    <div class="stats">
+      <div class="stat"><b><?= $counts['total'] ?></b><span>Total enquiries</span></div>
+      <div class="stat"><b><?= $counts['new'] ?></b><span>New, unhandled</span></div>
+      <div class="stat"><b><?= $openCount ?></b><span>Open (new, contacted, quoted)</span></div>
+      <div class="stat"><b><?= $counts['won'] ?></b><span>Won</span></div>
+      <div class="stat"><b><?= $counts['closed'] ?></b><span>Closed</span></div>
+      <?php if ($teamCount !== null): ?><div class="stat"><b><?= $teamCount ?></b><span>Team accounts</span></div><?php endif; ?>
+    </div>
+    <?php else: ?>
+    <div class="stats"><div class="stat"><b><?= admin_h(str_replace('_', ' ', (string) $user['role'])) ?></b><span>Your role</span></div></div>
+    <?php endif; ?>
+
+    <?php if ($canCustomers): ?>
+    <div class="card">
+      <h2>Latest enquiries</h2>
+      <p class="sub">The 5 most recent records. <a href="?view=customers" style="color:var(--orange);font-weight:700">Open the full customer list</a>.</p>
+      <?php if (!$recent): ?>
+        <div class="empty"><h2>No enquiries yet</h2><p>Assessments submitted on the website will appear here.</p></div>
+      <?php else: ?>
+        <div style="overflow-x:auto">
+        <table>
+          <thead><tr><th>Customer</th><th>Location</th><th>Package</th><th>Status</th><th>Received</th></tr></thead>
+          <tbody>
+          <?php foreach ($recent as $customer): ?>
+            <tr>
+              <td><strong><?= admin_h((string) $customer['name']) ?></strong><br><span class="muted"><?= admin_h((string) $customer['phone']) ?></span></td>
+              <td><?= admin_h((string) $customer['location']) ?></td>
+              <td><?= admin_h((string) $customer['recommended_package']) ?></td>
+              <td><span class="pill st"><?= admin_h((string) $customer['status']) ?></span></td>
+              <td class="muted"><?= admin_h((string) $customer['created_at']) ?></td>
+            </tr>
+          <?php endforeach; ?>
+          </tbody>
+        </table>
+        </div>
+      <?php endif; ?>
+    </div>
+    <?php endif; ?>
+
+    <?php if ($events): ?>
+    <div class="card">
+      <h2>Recent activity</h2>
+      <p class="sub">Latest audited actions. <a href="?view=audit" style="color:var(--orange);font-weight:700">Open the audit log</a>.</p>
+      <div style="overflow-x:auto">
+      <table>
+        <thead><tr><th>When</th><th>Who</th><th>Action</th></tr></thead>
+        <tbody>
+        <?php foreach ($events as $event): ?>
+          <tr>
+            <td class="muted"><?= admin_h((string) $event['created_at']) ?></td>
+            <td><?= admin_h((string) $event['actor_email']) ?></td>
+            <td class="mono"><?= admin_h((string) $event['action']) ?></td>
+          </tr>
+        <?php endforeach; ?>
+        </tbody>
+      </table>
+      </div>
+    </div>
+    <?php endif; ?>
+
+    <div class="card">
+      <h2>Go to section</h2>
+      <p class="sub">Only sections your role can access are listed.</p>
+      <div class="quick">
+        <?php foreach (admin_nav_items() as $item): if ($item['view'] === 'dashboard' || !user_can($user, $item['permission'])) continue; ?>
+          <a href="?view=<?= $item['view'] ?>"><?= admin_h($item['label']) ?><span><?= admin_h(match ($item['view']) {
+            'customers' => 'Enquiries, statuses and contact details',
+            'content' => 'Page copy and solar packages',
+            'contact' => 'Phone, email, address and social links',
+            'team' => 'Accounts, roles and passwords',
+            'audit' => 'Append-only history of admin actions',
+            default => 'Open section',
+          }) ?></span></a>
+        <?php endforeach; ?>
+      </div>
+    </div>
+    <?php
+    admin_page_end();
+}
+
 function view_customers(array $user, string $statusFilter, string $search): void
 {
     assert_permission($user, 'customers.view');

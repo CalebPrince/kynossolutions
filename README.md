@@ -19,7 +19,7 @@ The public site includes dedicated About, Solutions, Projects and Contact pages.
 
 ## Administration
 
-Access is role-based and always enforced on the server, never only by hiding menus:
+Access is role-based and always enforced on the server, never only by hiding menus. After sign-in the **Dashboard** is the landing page: enquiry stats, latest enquiries and recent activity, with every section still permission-gated.
 
 - **super_admin** — customers, site content, contact/social settings, team management and the audit log.
 - **admin** — customers, site content and contact/social settings.

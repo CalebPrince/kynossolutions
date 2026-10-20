@@ -2,7 +2,7 @@
 
 ## Design direction
 
-The admin uses KYNOS navy, white and orange with Montserrat headings and Mulish body text. A persistent left navigation separates Customers, Site content, Contact and social links, Team and Audit log. Dense operational tables are used only where comparison matters.
+The admin uses KYNOS navy, white and orange with Montserrat headings and Mulish body text. A persistent left navigation opens with Dashboard, then separates Customers, Site content, Contact and social links, Team and Audit log. Dense operational tables are used only where comparison matters.
 
 ## Capability matrix
 
@@ -10,6 +10,7 @@ The admin uses KYNOS navy, white and orange with Montserrat headings and Mulish 
 |---|---|---|---|
 | Sign in | All named users | BUILT | Email/password, throttling, session regeneration, safe errors |
 | First-run setup | (none, bootstrap only) | BUILT | Creates the first super admin only while `admin_users` is empty |
+| Dashboard | All roles (same access as Customers) | BUILT | Landing page after sign-in; enquiry stat cards, latest enquiries, recent audit activity and section shortcuts, each section permission-gated |
 | Customers | super_admin, admin, staff | BUILT | Enquiry list with status; staff may update status only |
 | Site content | super_admin, admin | BUILT | Allowlisted plain-text fields, server validation, audit |
 | Contact/social settings | super_admin, admin | BUILT | Validated phone, WhatsApp, email and HTTPS-only URLs |

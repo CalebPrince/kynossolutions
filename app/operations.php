@@ -40,6 +40,20 @@ function customer_find(int $id): ?array
     return $row ?: null;
 }
 
+/** @return array<string, int> Status key => count, plus a 'total' key. */
+function customer_status_counts(): array
+{
+    $counts = array_fill_keys(CUSTOMER_STATUSES, 0);
+    $counts['total'] = 0;
+    foreach (db()->query('SELECT status, COUNT(*) AS n FROM customer_enquiries GROUP BY status')->fetchAll() as $row) {
+        $status = (string) $row['status'];
+        $n = (int) $row['n'];
+        $counts[$status] = $n;
+        $counts['total'] += $n;
+    }
+    return $counts;
+}
+
 /** @return array{ok: bool, error: string} */
 function customer_set_status(array $actor, int $customerId, string $status): array
 {

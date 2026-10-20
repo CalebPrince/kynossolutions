@@ -10,6 +10,7 @@ function admin_h(?string $value): string
 function admin_nav_items(): array
 {
     return [
+        ['view' => 'dashboard', 'label' => 'Dashboard', 'permission' => 'customers.view'],
         ['view' => 'customers', 'label' => 'Customers', 'permission' => 'customers.view'],
         ['view' => 'content', 'label' => 'Site content', 'permission' => 'content.manage'],
         ['view' => 'contact', 'label' => 'Contact & social', 'permission' => 'settings.manage'],
@@ -98,6 +99,16 @@ details.audit-details pre{margin:6px 0 0;background:var(--mist);padding:8px;bord
 .pkg-editor{border:1px solid var(--line);border-radius:8px;padding:16px;margin-bottom:14px}
 .pkg-editor h3{font-size:15px;margin-bottom:10px}
 .mono{font-family:ui-monospace,Consolas,monospace;font-size:12.5px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-bottom:20px}
+.stat{background:var(--white);border:1px solid var(--line);border-radius:10px;padding:16px 18px}
+.stat b{display:block;font-size:28px;color:var(--navy);line-height:1.2}
+.stat span{color:var(--muted);font-size:13px}
+.stat a{color:var(--orange);font-weight:700;font-size:13px;text-decoration:none}
+.stat a:hover{text-decoration:underline}
+.quick{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px}
+.quick a{display:block;background:var(--white);border:1px solid var(--line);border-radius:10px;padding:16px 18px;text-decoration:none;font-weight:700;color:var(--navy)}
+.quick a:hover{border-color:var(--orange);color:var(--orange)}
+.quick a span{display:block;font-weight:400;color:var(--muted);font-size:13px;margin-top:4px}
 @media(max-width:860px){.shell{flex-direction:column}.side{width:100%;flex-direction:row;flex-wrap:wrap;align-items:center;padding:12px}.side .brand{border:0;padding:0 12px}.side nav{flex-direction:row;flex-wrap:wrap;padding:8px 12px}.side .who{margin:0 0 0 auto;border:0;padding:0 12px;display:flex;gap:10px;align-items:center}.side .who form{margin:0}.side .who button{width:auto}main{padding:20px 16px 48px}.grid2,.grid3{grid-template-columns:1fr}}
 </style>
 </head>

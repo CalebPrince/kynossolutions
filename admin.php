@@ -41,7 +41,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         try {
             verify_csrf();
         } catch (AuthException) {
-            admin_redirect('customers');
+            admin_redirect('dashboard');
         }
         logout_user();
         header('Location: admin.php');
@@ -192,7 +192,7 @@ if ($user === null) {
     exit;
 }
 
-$view = (string) ($_GET['view'] ?? 'customers');
+$view = (string) ($_GET['view'] ?? 'dashboard');
 $navPermissions = [];
 foreach (admin_nav_items() as $item) {
     $navPermissions[$item['view']] = $item['permission'];
@@ -200,6 +200,9 @@ foreach (admin_nav_items() as $item) {
 
 try {
     switch ($view) {
+        case 'dashboard':
+            view_dashboard($user);
+            break;
         case 'customers':
             view_customers($user, (string) ($_GET['status'] ?? ''), trim((string) ($_GET['q'] ?? '')));
             break;
