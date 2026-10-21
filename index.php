@@ -199,14 +199,6 @@ $socialLinks = site_social_links();
   .assess { padding: 40px max(20px, calc((100vw - 1180px) / 2)) 40px 40px; border-block: 1px solid var(--line); }
   .assess h2 { font-size: clamp(26px, 3.2vw, 34px); font-weight: 800; }
   .assess .lede { color: var(--muted); max-width: 440px; margin-top: 8px; }
-  .assess-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; margin-top: 24px; align-items: stretch; }
-  .assess-steps { display: grid; gap: 20px; }
-  .assess-steps li { display: flex; gap: 18px; align-items: center; }
-  .assess-steps .ico { font-size: 30px; color: var(--orange); }
-  .assess-steps strong { display: block; font-family: var(--display); font-size: 14px; color: var(--navy); }
-  .assess-steps span { font-size: 13px; color: var(--muted); }
-  .assess-grid img { width: 100%; height: 100%; min-height: 220px; object-fit: cover; object-position: 30% center; }
-  .assess .btn { margin-top: 24px; min-width: 300px; padding-block: 16px; }
 
   /* Projects */
   .projects { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
@@ -242,8 +234,6 @@ $socialLinks = site_social_links();
   @keyframes drop { from { opacity: 0; transform: translateY(-18px); } to { opacity: 1; transform: none; } }
   @keyframes wipe { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
   @keyframes heroFade { from { opacity: 1; } to { opacity: 0; } }
-  @keyframes pop { from { opacity: 0; transform: translateY(18px) scale(.97); } to { opacity: 1; transform: none; } }
-  @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
   .js .site-header { animation: drop .7s cubic-bezier(.2,.7,.2,1) both; }
   .js .hero::after { content: ""; position: absolute; top: 0; right: 0; bottom: 0; left: 0; background: #F6FAFD; pointer-events: none; animation: heroFade 1.2s ease-out forwards; }
   .js .hero-copy > *, .js .hero h1 span { animation: rise .8s cubic-bezier(.2,.7,.2,1) both; }
@@ -263,8 +253,6 @@ $socialLinks = site_social_links();
   .solution:hover img, .project:hover img { transform: scale(1.05); }
   .why .badge { transition: transform .3s cubic-bezier(.2,.7,.2,1); }
   .why > div:hover .badge { transform: translateY(-4px) scale(1.06); }
-  dialog.la[open] { animation: pop .35s cubic-bezier(.2,.7,.2,1); }
-  dialog.la[open]::backdrop { animation: fade .3s ease-out; }
   .la-step.on { animation: rise .35s cubic-bezier(.2,.7,.2,1); }
 
   /* Mobile drawer */
@@ -286,29 +274,23 @@ $socialLinks = site_social_links();
   .drawer-actions .btn { width: 100%; padding-block: 15px; font-size: 14px; }
   .drawer-actions p { font-size: 13px; color: var(--muted); text-align: center; margin-top: 4px; }
 
-  /* Assessment dialog */
-  dialog.la { border: 0; padding: 0; width: min(760px, 100% - 24px); max-height: min(92vh, 860px); max-height: min(92dvh, 860px); border-radius: 6px; color: var(--ink); background: var(--white); box-shadow: 0 30px 80px rgba(7,30,47,.45); overflow: hidden; }
-  dialog.la:not([open]) { display: none; }
-  dialog.la[open] { display: flex; flex-direction: column; }
-  dialog.la::backdrop { background: rgba(7,30,47,.72); }
-  /* older iPhones (Safari before 15.4) have no <dialog>: the script positions it by hand */
-  dialog.la.la-polyfill[open] { position: fixed; top: 50%; left: 50%; margin: 0; z-index: 10001; -webkit-transform: translate(-50%, -50%); transform: translate(-50%, -50%); animation: fade .3s ease-out; }
-  .la-backdrop { position: fixed; top: 0; right: 0; bottom: 0; left: 0; z-index: 10000; background: rgba(7,30,47,.72); }
-  html.la-lock, html.la-lock body { overflow: hidden; }
-  .la-head { background: var(--navy); color: var(--white); padding: 20px 26px 0; }
-  .la-head .row { display: flex; justify-content: space-between; align-items: center; gap: 16px; }
-  .la-head h2 { color: var(--white); font-size: 22px; font-weight: 800; }
-  .la-close { background: transparent; border: 0; color: var(--white); font-size: 24px; line-height: 0; padding: 6px; border-radius: 4px; }
-  .la-close:hover { background: rgba(255,255,255,.14); }
-  .la-progress { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-top: 16px; }
-  .la-progress li { font-family: var(--display); font-size: 11px; font-weight: 600; color: #8FA3B4; padding-bottom: 12px; border-bottom: 3px solid rgba(255,255,255,.16); }
-  .la-progress li.on { color: var(--white); border-bottom-color: var(--orange); }
-  .la-body { padding: 26px; overflow-y: auto; flex: 1; min-height: 0; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
+  /* Assessment panel: sits in the page, its steps are tabs */
+  .la { margin-top: 24px; color: var(--ink); background: var(--white); border-radius: 6px; box-shadow: 0 18px 50px rgba(11,42,64,.12); scroll-margin-top: 84px; }
+  .la-head { background: var(--navy); color: var(--white); padding: 6px 26px 0; border-radius: 6px 6px 0 0; }
+  .la-tabs { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+  .la-tabs button { width: 100%; height: 100%; text-align: left; background: transparent; border: 0; border-bottom: 3px solid rgba(255,255,255,.16); padding: 14px 2px 12px; font-family: var(--display); font-size: 12px; font-weight: 600; color: #8FA3B4; cursor: pointer; transition: color .2s, border-color .2s; }
+  .la-tabs button:hover { color: var(--white); }
+  .la-tabs button.done { color: #D5DEE6; border-bottom-color: rgba(242,101,34,.55); }
+  .la-tabs button[aria-selected="true"] { color: var(--white); border-bottom-color: var(--orange); }
+  .la-tabs button:focus-visible { outline: 3px solid var(--amber); outline-offset: -3px; }
+  .la-tabs .n { display: inline-block; margin-right: 4px; }
+  .la-body { padding: 26px; }
   .la-step { display: none; }
   .la-step.on { display: block; }
   .la-step h3 { font-size: 20px; font-weight: 800; }
   .la-step > p.hint { color: var(--muted); margin: 6px 0 20px; font-size: 15px; }
-  .la-foot { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 16px 26px; border-top: 1px solid var(--line); background: var(--mist); flex-wrap: wrap; }
+  /* sticks to the bottom of the screen while the panel is in view, so Next is always reachable on a phone */
+  .la-foot { position: -webkit-sticky; position: sticky; bottom: 0; z-index: 2; display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 16px 26px; border-top: 1px solid var(--line); background: var(--mist); flex-wrap: wrap; border-radius: 0 0 6px 6px; }
   .la-live { font-family: var(--display); font-size: 13px; font-weight: 600; color: var(--navy); }
   .la-live b { color: var(--orange); font-weight: 800; }
   .la-nav { display: flex; gap: 10px; margin-left: auto; }
@@ -388,13 +370,19 @@ $socialLinks = site_social_links();
     .benefits li { padding: 18px 4px; }
     .benefits li + li::before { top: 0; left: 0; width: 100%; height: 1px; display: block !important; }
     .why { grid-template-columns: repeat(2, 1fr); }
-    .assess-grid { grid-template-columns: 1fr; }
-    .assess .btn { min-width: 0; width: 100%; }
     .site-footer .wrap.cols { grid-template-columns: 1fr; }
     .site-footer .wrap.cols { text-align: center; justify-items: center; }
     .site-footer .brand img { margin-inline: auto; }
     .contact-list li, .socials { justify-content: center; }
     .legal .wrap { flex-direction: column; align-items: center; text-align: center; gap: 8px; }
+    /* phones: only the open tab shows its name, the others shrink to their number */
+    .la-head { padding: 4px 14px 0; }
+    .la-tabs { display: flex; gap: 4px; }
+    .la-tabs button { flex: 0 0 34px; text-align: center; }
+    .la-tabs button[aria-selected="true"] { flex: 1 1 auto; text-align: left; padding-left: 6px; }
+    .la-tabs button:not([aria-selected="true"]) .t { display: none; }
+    .la-body { padding: 22px 16px; }
+    .la-foot { padding: 14px 16px; }
     .choice-grid, .appl-list, .field-grid { grid-template-columns: 1fr; }
     .custom-add { grid-template-columns: 1fr 1fr; }
     .custom-add .btn { grid-column: 1 / -1; }
@@ -487,7 +475,7 @@ $socialLinks = site_social_links();
   </nav>
   <div class="drawer-actions">
     <a class="btn btn-wa" data-wa="Hello KYNOS Solar Systems, I would like a quote for a solar system." href="#contact"><svg class="ico wa"><use href="#i-wa"/></svg>Get a Quote</a>
-    <button class="btn btn-primary" type="button" data-open-assessment>Start Load Assessment <svg class="ico"><use href="#i-arrow"/></svg></button>
+    <a class="btn btn-primary" href="#assessment">Start Load Assessment <svg class="ico"><use href="#i-arrow"/></svg></a>
     <a class="btn btn-outline" href="tel:+<?= htmlspecialchars($phoneIntl, ENT_QUOTES, 'UTF-8') ?>"><svg class="ico" style="font-size:18px"><use href="#i-phone"/></svg>Call <?= htmlspecialchars($phoneDisplay, ENT_QUOTES, 'UTF-8') ?></a>
     <p>Solar packages from <?= htmlspecialchars($packagesFrom, ENT_QUOTES, 'UTF-8') ?></p>
   </div>
@@ -502,7 +490,7 @@ $socialLinks = site_social_links();
         <p><?= htmlspecialchars(setting('page_home_hero_intro'), ENT_QUOTES, 'UTF-8') ?></p>
         <div class="hero-actions">
           <a class="btn btn-wa" data-wa="Hello KYNOS Solar Systems, I am interested in a solar package from <?= htmlspecialchars($packagesFrom, ENT_QUOTES, 'UTF-8') ?>." href="#package"><svg class="ico wa"><use href="#i-wa"/></svg><span>Get a Solar Package<br>from <?= htmlspecialchars($packagesFrom, ENT_QUOTES, 'UTF-8') ?></span><svg class="ico"><use href="#i-arrow"/></svg></a>
-          <button class="btn btn-outline" type="button" data-open-assessment>Request a Free Assessment <svg class="ico"><use href="#i-arrow"/></svg></button>
+          <a class="btn btn-outline" href="#assessment">Request a Free Assessment <svg class="ico"><use href="#i-arrow"/></svg></a>
         </div>
       </div>
     </div>
@@ -590,17 +578,82 @@ $socialLinks = site_social_links();
     <div class="assess">
       <h2>Solar <span class="accent">Load Assessment</span></h2>
       <p class="lede">Tell us what you want to power and we'll recommend the right solar package for your home or business.</p>
-      <div class="assess-grid">
-        <div>
-          <ul class="assess-steps">
-            <li><svg class="ico"><use href="#i-home"/></svg><div><strong>Type of property</strong><span>Home, office or business</span></div></li>
-            <li><svg class="ico"><use href="#i-plug"/></svg><div><strong>List your appliances</strong><span>What you want to power</span></div></li>
-            <li><svg class="ico"><use href="#i-clock"/></svg><div><strong>Usage details</strong><span>Quantity and hours of use</span></div></li>
-            <li><svg class="ico"><use href="#i-calc"/></svg><div><strong>Get a recommendation</strong><span>We'll suggest the right package</span></div></li>
-          </ul>
-          <button class="btn btn-primary" type="button" data-open-assessment>Start Load Assessment <svg class="ico"><use href="#i-arrow"/></svg></button>
+      <div class="la" id="la">
+        <div class="la-head">
+          <div class="la-tabs" role="tablist" id="laTabs" aria-label="Assessment steps">
+            <button type="button" role="tab" id="laTab0" aria-controls="laStep0"><span class="n">1.</span><span class="t">Property</span></button>
+            <button type="button" role="tab" id="laTab1" aria-controls="laStep1"><span class="n">2.</span><span class="t">Appliances</span></button>
+            <button type="button" role="tab" id="laTab2" aria-controls="laStep2"><span class="n">3.</span><span class="t">Usage</span></button>
+            <button type="button" role="tab" id="laTab3" aria-controls="laStep3"><span class="n">4.</span><span class="t">Your details</span></button>
+            <button type="button" role="tab" id="laTab4" aria-controls="laStep4"><span class="n">5.</span><span class="t">Recommendation</span></button>
+          </div>
         </div>
-        <img src="images/solar-panels.jpg" alt="Solar panels catching the evening sun" loading="lazy">
+
+        <form class="la-body" id="laForm" novalidate>
+          <section class="la-step" data-step="0" id="laStep0" role="tabpanel" aria-labelledby="laTab0">
+            <h3>What type of property is it?</h3>
+            <p class="hint">This helps us understand how the system will be used.</p>
+            <div class="choice-grid">
+              <label class="choice"><input type="radio" name="property" id="p-home" value="Home"><span class="face"><svg class="ico"><use href="#i-home"/></svg><span><strong>Home</strong><span>House or apartment</span></span></span></label>
+              <label class="choice"><input type="radio" name="property" id="p-office" value="Office"><span class="face"><svg class="ico"><use href="#i-office"/></svg><span><strong>Office</strong><span>Workspace or clinic</span></span></span></label>
+              <label class="choice"><input type="radio" name="property" id="p-shop" value="Business"><span class="face"><svg class="ico"><use href="#i-shop"/></svg><span><strong>Business</strong><span>Shop, restaurant, salon</span></span></span></label>
+              <label class="choice"><input type="radio" name="property" id="p-other" value="Other"><span class="face"><svg class="ico"><use href="#i-dots"/></svg><span><strong>Other</strong><span>School, church, farm</span></span></span></label>
+            </div>
+          </section>
+
+          <section class="la-step" data-step="1" id="laStep1" role="tabpanel" aria-labelledby="laTab1">
+            <h3>What do you want to power?</h3>
+            <p class="hint">Set how many of each appliance you have. Wattages are typical values, your installer will confirm the real ones.</p>
+            <div class="appl-list" id="applList"></div>
+            <div class="custom-add">
+              <div class="field"><label for="cName">Something else?</label><input id="cName" type="text" maxlength="40" placeholder="Appliance name"></div>
+              <div class="field"><label for="cWatts">Watts</label><input id="cWatts" type="number" min="1" max="20000" inputmode="numeric" placeholder="e.g. 300"></div>
+              <button class="btn btn-outline btn-sm" type="button" id="cAdd" style="height:46px">Add</button>
+            </div>
+          </section>
+
+          <section class="la-step" data-step="2" id="laStep2" role="tabpanel" aria-labelledby="laTab2">
+            <h3>How do you use them?</h3>
+            <p class="hint">Adjust the hours each appliance runs on a normal day.</p>
+            <table class="hours">
+              <thead><tr><th>Appliance</th><th>Qty</th><th>Hours per day</th></tr></thead>
+              <tbody id="hoursBody"></tbody>
+            </table>
+            <div class="field">
+              <label for="mode">How do you want to use solar?</label>
+              <select id="mode" name="mode">
+                <option value="backup">Backup when the power goes off</option>
+                <option value="hybrid" selected>Solar by day, battery through the evening</option>
+                <option value="offgrid">Fully off-grid, day and night</option>
+              </select>
+            </div>
+          </section>
+
+          <section class="la-step" data-step="3" id="laStep3" role="tabpanel" aria-labelledby="laTab3">
+            <h3>Your details</h3>
+            <p class="hint">So our team can confirm your recommendation and arrange a site visit.</p>
+            <div class="field-grid">
+              <div class="field"><label for="fName">Full name *</label><input id="fName" type="text" maxlength="60" autocomplete="name" required></div>
+              <div class="field"><label for="fPhone">Telephone *</label><input id="fPhone" type="tel" maxlength="16" autocomplete="tel" placeholder="e.g. 053 040 9118" required></div>
+              <div class="field"><label for="fLocation">Location *</label><input id="fLocation" type="text" maxlength="60" placeholder="Town or area, e.g. East Legon" required></div>
+              <div class="field"><label for="fEmail">Email (optional)</label><input id="fEmail" type="email" maxlength="80" autocomplete="email"></div>
+              <div class="field full"><label for="fNotes">Anything else we should know? (optional)</label><input id="fNotes" type="text" maxlength="200" placeholder="Roof type, budget, timeline"></div>
+            </div>
+          </section>
+
+          <section class="la-step" data-step="4" id="laStep4" role="tabpanel" aria-labelledby="laTab4">
+            <div id="resultBox"></div>
+          </section>
+        </form>
+
+        <div class="la-foot">
+          <p class="la-error" id="laError" role="alert"></p>
+          <span class="la-live" id="laLive"></span>
+          <div class="la-nav">
+            <button class="btn btn-outline btn-sm" type="button" id="laBack"><svg class="ico"><use href="#i-back"/></svg>Back</button>
+            <button class="btn btn-primary btn-sm" type="button" id="laNext">Next <svg class="ico"><use href="#i-arrow"/></svg></button>
+          </div>
+        </div>
       </div>
     </div>
   </section>
@@ -688,84 +741,6 @@ $socialLinks = site_social_links();
   </div>
 </footer>
 
-<!-- Load assessment -->
-<dialog class="la" id="la" aria-labelledby="laTitle">
-  <div class="la-head">
-    <div class="row">
-      <h2 id="laTitle">Solar Load Assessment</h2>
-      <button class="la-close" type="button" id="laClose" aria-label="Close assessment"><svg class="ico"><use href="#i-x"/></svg></button>
-    </div>
-    <ol class="la-progress" id="laProgress">
-      <li>1. Property</li><li>2. Appliances</li><li>3. Usage</li><li>4. Your details</li><li>5. Recommendation</li>
-    </ol>
-  </div>
-
-  <form class="la-body" id="laForm" novalidate>
-    <section class="la-step" data-step="0">
-      <h3>What type of property is it?</h3>
-      <p class="hint">This helps us understand how the system will be used.</p>
-      <div class="choice-grid">
-        <label class="choice"><input type="radio" name="property" id="p-home" value="Home"><span class="face"><svg class="ico"><use href="#i-home"/></svg><span><strong>Home</strong><span>House or apartment</span></span></span></label>
-        <label class="choice"><input type="radio" name="property" id="p-office" value="Office"><span class="face"><svg class="ico"><use href="#i-office"/></svg><span><strong>Office</strong><span>Workspace or clinic</span></span></span></label>
-        <label class="choice"><input type="radio" name="property" id="p-shop" value="Business"><span class="face"><svg class="ico"><use href="#i-shop"/></svg><span><strong>Business</strong><span>Shop, restaurant, salon</span></span></span></label>
-        <label class="choice"><input type="radio" name="property" id="p-other" value="Other"><span class="face"><svg class="ico"><use href="#i-dots"/></svg><span><strong>Other</strong><span>School, church, farm</span></span></span></label>
-      </div>
-    </section>
-
-    <section class="la-step" data-step="1">
-      <h3>What do you want to power?</h3>
-      <p class="hint">Set how many of each appliance you have. Wattages are typical values, your installer will confirm the real ones.</p>
-      <div class="appl-list" id="applList"></div>
-      <div class="custom-add">
-        <div class="field"><label for="cName">Something else?</label><input id="cName" type="text" maxlength="40" placeholder="Appliance name"></div>
-        <div class="field"><label for="cWatts">Watts</label><input id="cWatts" type="number" min="1" max="20000" inputmode="numeric" placeholder="e.g. 300"></div>
-        <button class="btn btn-outline btn-sm" type="button" id="cAdd" style="height:46px">Add</button>
-      </div>
-    </section>
-
-    <section class="la-step" data-step="2">
-      <h3>How do you use them?</h3>
-      <p class="hint">Adjust the hours each appliance runs on a normal day.</p>
-      <table class="hours">
-        <thead><tr><th>Appliance</th><th>Qty</th><th>Hours per day</th></tr></thead>
-        <tbody id="hoursBody"></tbody>
-      </table>
-      <div class="field">
-        <label for="mode">How do you want to use solar?</label>
-        <select id="mode" name="mode">
-          <option value="backup">Backup when the power goes off</option>
-          <option value="hybrid" selected>Solar by day, battery through the evening</option>
-          <option value="offgrid">Fully off-grid, day and night</option>
-        </select>
-      </div>
-    </section>
-
-    <section class="la-step" data-step="3">
-      <h3>Your details</h3>
-      <p class="hint">So our team can confirm your recommendation and arrange a site visit.</p>
-      <div class="field-grid">
-        <div class="field"><label for="fName">Full name *</label><input id="fName" type="text" maxlength="60" autocomplete="name" required></div>
-        <div class="field"><label for="fPhone">Telephone *</label><input id="fPhone" type="tel" maxlength="16" autocomplete="tel" placeholder="e.g. 053 040 9118" required></div>
-        <div class="field"><label for="fLocation">Location *</label><input id="fLocation" type="text" maxlength="60" placeholder="Town or area, e.g. East Legon" required></div>
-        <div class="field"><label for="fEmail">Email (optional)</label><input id="fEmail" type="email" maxlength="80" autocomplete="email"></div>
-        <div class="field full"><label for="fNotes">Anything else we should know? (optional)</label><input id="fNotes" type="text" maxlength="200" placeholder="Roof type, budget, timeline"></div>
-      </div>
-    </section>
-
-    <section class="la-step" data-step="4">
-      <div id="resultBox"></div>
-    </section>
-  </form>
-
-  <div class="la-foot">
-    <p class="la-error" id="laError" role="alert"></p>
-    <span class="la-live" id="laLive"></span>
-    <div class="la-nav">
-      <button class="btn btn-outline btn-sm" type="button" id="laBack"><svg class="ico"><use href="#i-back"/></svg>Back</button>
-      <button class="btn btn-primary btn-sm" type="button" id="laNext">Next <svg class="ico"><use href="#i-arrow"/></svg></button>
-    </div>
-  </div>
-</dialog>
 
 <script>
 (function () {
@@ -879,7 +854,7 @@ $socialLinks = site_social_links();
   navToggle.addEventListener("click", function () { setDrawer(true); });
   $("drawerClose").addEventListener("click", function () { setDrawer(false); });
   $("drawerBackdrop").addEventListener("click", function () { setDrawer(false); });
-  drawer.addEventListener("click", function (e) { if (e.target.closest("a, [data-open-assessment]")) setDrawer(false); });
+  drawer.addEventListener("click", function (e) { if (e.target.closest("a")) setDrawer(false); });
   document.addEventListener("keydown", function (e) { if (e.key === "Escape") setDrawer(false); });
   var wide = window.matchMedia("(min-width: 1001px)");
   function onWide(m) { if (m.matches) setDrawer(false); }
@@ -890,7 +865,7 @@ $socialLinks = site_social_links();
   (function () {
     var groups = [
       [".benefits li", 90], [".section-head", 0], [".solution", 110], [".why > div", 90, "zoom"],
-      [".package > *", 70], [".assess > h2, .assess > .lede, .assess-steps li, .assess-grid > img, .assess-grid .btn", 80],
+      [".package > *", 70], [".assess > h2, .assess > .lede, .assess > .la", 80],
       [".project", 110], [".cta .wrap > *", 120], [".site-footer .cols > *", 90]
     ];
     var items = [];
@@ -922,7 +897,7 @@ $socialLinks = site_social_links();
   /* ---- Load assessment ---- */
   var dlg = $("la"), step = 0, LAST = 4;
   var steps = dlg.querySelectorAll(".la-step");
-  var progress = $("laProgress").children;
+  var tabs = $("laTabs").children;
   var errorBox = $("laError"), live = $("laLive");
   var backBtn = $("laBack"), nextBtn = $("laNext");
 
@@ -1086,7 +1061,7 @@ $socialLinks = site_social_links();
     box.appendChild(actions);
   }
 
-  function validate() {
+  function validate(step) {
     if (step === 0 && !dlg.querySelector("input[name=property]:checked")) return "Please choose a property type.";
     if (step === 1 && !selected().length) return "Add at least one appliance to continue.";
     if (step === 2 && calc().daily <= 0) return "Enter the hours of use for at least one appliance.";
@@ -1100,10 +1075,15 @@ $socialLinks = site_social_links();
     return "";
   }
 
-  function show(n) {
+  function show(n, focusTab) {
     step = n;
     steps.forEach(function (s, i) { s.classList.toggle("on", i === n); });
-    for (var i = 0; i < progress.length; i++) progress[i].classList.toggle("on", i <= n);
+    for (var i = 0; i < tabs.length; i++) {
+      tabs[i].classList.toggle("done", i < n);
+      tabs[i].setAttribute("aria-selected", i === n ? "true" : "false");
+      tabs[i].tabIndex = i === n ? 0 : -1;
+    }
+    if (focusTab) tabs[n].focus();
     if (n === 2) renderHours();
     if (n === LAST) renderResult();
     backBtn.style.visibility = n === 0 ? "hidden" : "visible";
@@ -1112,7 +1092,27 @@ $socialLinks = site_social_links();
     else nextBtn.append(n === 3 ? "See my recommendation " : "Next ", icon("i-arrow"));
     errorBox.textContent = "";
     updateLive();
-    $("laForm").scrollTop = 0;
+  }
+
+  /* after a step change, bring the top of the panel back into view if the user had scrolled past it */
+  function toTop() {
+    if (dlg.getBoundingClientRect().top < 0) dlg.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  /* move to step n, stopping at the first earlier step that is not filled in yet */
+  function go(n, focusTab) {
+    if (n === step) return;
+    for (var s = 0; s < n; s++) {
+      var err = validate(s);
+      if (err) {
+        if (s !== step) show(s, focusTab);
+        errorBox.textContent = err;
+        toTop();
+        return;
+      }
+    }
+    show(n, focusTab);
+    toTop();
   }
 
   function reset() {
@@ -1125,12 +1125,21 @@ $socialLinks = site_social_links();
   }
 
   nextBtn.addEventListener("click", function () {
-    if (step === LAST) { reset(); return; }
-    var err = validate();
-    if (err) { errorBox.textContent = err; return; }
-    show(step + 1);
+    if (step === LAST) { reset(); toTop(); return; }
+    go(step + 1);
   });
-  backBtn.addEventListener("click", function () { if (step > 0) show(step - 1); });
+  backBtn.addEventListener("click", function () { if (step > 0) go(step - 1); });
+  for (var t = 0; t < tabs.length; t++) {
+    (function (n) { tabs[n].addEventListener("click", function () { go(n); }); })(t);
+  }
+  $("laTabs").addEventListener("keydown", function (e) {
+    var d = e.key === "ArrowRight" ? 1 : e.key === "ArrowLeft" ? -1 : 0;
+    if (e.key === "Home") d = -step;
+    if (e.key === "End") d = LAST - step;
+    if (!d) return;
+    e.preventDefault();
+    go(Math.min(LAST, Math.max(0, step + d)), true);
+  });
   $("laForm").addEventListener("submit", function (e) { e.preventDefault(); nextBtn.click(); });
   $("laForm").addEventListener("change", function () { errorBox.textContent = ""; updateLive(); });
 
@@ -1144,36 +1153,6 @@ $socialLinks = site_social_links();
     updateLive();
     $("applList").lastElementChild.scrollIntoView({ block: "nearest" });
   });
-
-  /* Safari before iOS 15.4 has no <dialog>, so fall back to a fixed panel and backdrop */
-  var nativeDialog = typeof dlg.showModal === "function", laBackdrop = null;
-  function openDialog() {
-    document.documentElement.classList.add("la-lock");
-    if (nativeDialog) { dlg.showModal(); return; }
-    if (!laBackdrop) {
-      laBackdrop = el("div", "la-backdrop");
-      laBackdrop.addEventListener("click", closeDialog);
-      document.body.appendChild(laBackdrop);
-    }
-    laBackdrop.hidden = false;
-    dlg.classList.add("la-polyfill");
-    dlg.setAttribute("open", "");
-    $("laClose").focus();
-  }
-  function closeDialog() {
-    document.documentElement.classList.remove("la-lock");
-    if (nativeDialog) { if (dlg.open) dlg.close(); return; }
-    dlg.removeAttribute("open");
-    if (laBackdrop) laBackdrop.hidden = true;
-  }
-  document.querySelectorAll("[data-open-assessment]").forEach(function (btn) {
-    btn.addEventListener("click", openDialog);
-  });
-  $("laClose").addEventListener("click", closeDialog);
-  dlg.addEventListener("click", function (e) { if (e.target === dlg) closeDialog(); });
-  // native dialogs also close on Escape, which skips closeDialog
-  dlg.addEventListener("close", function () { document.documentElement.classList.remove("la-lock"); });
-  document.addEventListener("keydown", function (e) { if (e.key === "Escape" && !nativeDialog && dlg.hasAttribute("open")) closeDialog(); });
 
   renderAppliances();
   show(0);
