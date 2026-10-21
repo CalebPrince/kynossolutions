@@ -2,32 +2,12 @@
 declare(strict_types=1);
 session_start();
 require __DIR__ . '/app/site-data.php';
-if (empty($_SESSION['csrf_token'])) {
-    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
-}
-$csrfToken = $_SESSION['csrf_token'];
 $phoneDisplay = setting('phone');
 $phoneIntl = phone_to_intl($phoneDisplay);
 $whatsappNumber = phone_to_intl(setting('whatsapp'));
 $packagesFrom = setting_packages_from();
 $sitePackages = solar_packages();
 $packageTierClasses = ['tier-bronze', 'tier-silver', 'tier-gold'];
-$packageLimits = [
-    ['maxKva' => 4.2, 'maxBatteryKwh' => 2.4, 'maxPanels' => 5],
-    ['maxKva' => 6, 'maxBatteryKwh' => 5.12, 'maxPanels' => 6],
-    ['maxKva' => 6, 'maxBatteryKwh' => 10.24, 'maxPanels' => 10],
-];
-$jsPackages = [];
-foreach ($sitePackages as $index => $package) {
-    $limit = $packageLimits[$index] ?? $packageLimits[count($packageLimits) - 1];
-    $jsPackages[] = [
-        'name' => $package['name'] . ' Package',
-        'price' => $package['price'],
-        'maxKva' => $limit['maxKva'],
-        'maxBatteryKwh' => $limit['maxBatteryKwh'],
-        'maxPanels' => $limit['maxPanels'],
-    ];
-}
 $socialLinks = site_social_links();
 ?>
 <!DOCTYPE html>
@@ -38,7 +18,6 @@ $socialLinks = site_social_links();
 <!-- light-only design: stop phone browsers from force-darkening the page, which hides the navy logo -->
 <meta name="color-scheme" content="only light">
 <meta name="theme-color" content="#FFFFFF">
-<meta name="csrf-token" content="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
 <script>document.documentElement.className = "js";</script>
 <title>KYNOS Solar Systems | Affordable Solar Solutions in Ghana</title>
 <meta name="description" content="KYNOS Solar Systems supplies and installs solar panels, inverters and lithium batteries for homes, offices and businesses in Ghana. Solar packages from GHC 39,000.">
@@ -199,6 +178,14 @@ $socialLinks = site_social_links();
   .assess { padding: 40px max(20px, calc((100vw - 1180px) / 2)) 40px 40px; border-block: 1px solid var(--line); }
   .assess h2 { font-size: clamp(26px, 3.2vw, 34px); font-weight: 800; }
   .assess .lede { color: var(--muted); max-width: 440px; margin-top: 8px; }
+  .assess-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; margin-top: 24px; align-items: stretch; }
+  .assess-steps { display: grid; gap: 20px; }
+  .assess-steps li { display: flex; gap: 18px; align-items: center; }
+  .assess-steps .ico { font-size: 30px; color: var(--orange); }
+  .assess-steps strong { display: block; font-family: var(--display); font-size: 14px; color: var(--navy); }
+  .assess-steps span { font-size: 13px; color: var(--muted); }
+  .assess-grid img { width: 100%; height: 100%; min-height: 220px; object-fit: cover; object-position: 30% center; }
+  .assess .btn { margin-top: 24px; min-width: 300px; padding-block: 16px; }
 
   /* Projects */
   .projects { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
@@ -253,7 +240,6 @@ $socialLinks = site_social_links();
   .solution:hover img, .project:hover img { transform: scale(1.05); }
   .why .badge { transition: transform .3s cubic-bezier(.2,.7,.2,1); }
   .why > div:hover .badge { transform: translateY(-4px) scale(1.06); }
-  .la-step.on { animation: rise .35s cubic-bezier(.2,.7,.2,1); }
 
   /* Mobile drawer */
   .drawer-backdrop { position: fixed; top: 0; right: 0; bottom: 0; left: 0; z-index: 40; background: rgba(7,30,47,.6); opacity: 0; visibility: hidden; transition: opacity .3s, visibility .3s; }
@@ -273,79 +259,6 @@ $socialLinks = site_social_links();
   .drawer-actions { display: grid; gap: 10px; padding: 18px 20px 24px; margin-top: auto; }
   .drawer-actions .btn { width: 100%; padding-block: 15px; font-size: 14px; }
   .drawer-actions p { font-size: 13px; color: var(--muted); text-align: center; margin-top: 4px; }
-
-  /* Assessment panel: sits in the page, its steps are tabs */
-  .la { margin-top: 24px; color: var(--ink); background: var(--white); border-radius: 6px; box-shadow: 0 18px 50px rgba(11,42,64,.12); scroll-margin-top: 84px; }
-  .la-head { background: var(--navy); color: var(--white); padding: 6px 26px 0; border-radius: 6px 6px 0 0; }
-  .la-tabs { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
-  .la-tabs button { width: 100%; height: 100%; text-align: left; background: transparent; border: 0; border-bottom: 3px solid rgba(255,255,255,.16); padding: 14px 2px 12px; font-family: var(--display); font-size: 12px; font-weight: 600; color: #8FA3B4; cursor: pointer; transition: color .2s, border-color .2s; }
-  .la-tabs button:hover { color: var(--white); }
-  .la-tabs button.done { color: #D5DEE6; border-bottom-color: rgba(242,101,34,.55); }
-  .la-tabs button[aria-selected="true"] { color: var(--white); border-bottom-color: var(--orange); }
-  .la-tabs button:focus-visible { outline: 3px solid var(--amber); outline-offset: -3px; }
-  .la-tabs .n { display: inline-block; margin-right: 4px; }
-  .la-body { padding: 26px; }
-  .la-step { display: none; }
-  .la-step.on { display: block; }
-  .la-step h3 { font-size: 20px; font-weight: 800; }
-  .la-step > p.hint { color: var(--muted); margin: 6px 0 20px; font-size: 15px; }
-  /* sticks to the bottom of the screen while the panel is in view, so Next is always reachable on a phone */
-  .la-foot { position: -webkit-sticky; position: sticky; bottom: 0; z-index: 2; display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 16px 26px; border-top: 1px solid var(--line); background: var(--mist); flex-wrap: wrap; border-radius: 0 0 6px 6px; }
-  .la-live { font-family: var(--display); font-size: 13px; font-weight: 600; color: var(--navy); }
-  .la-live b { color: var(--orange); font-weight: 800; }
-  .la-nav { display: flex; gap: 10px; margin-left: auto; }
-  /* lives in the footer, beside the Next button, so it is always in view on a phone */
-  .la-error { flex: 0 0 100%; color: #B42318; font-size: 14px; font-weight: 600; background: #FEF3F2; border: 1px solid #FDA29B; border-radius: 4px; padding: 9px 12px; }
-  .la-error:empty { display: none; }
-
-  .choice-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
-  .choice { position: relative; display: block; cursor: pointer; }
-  /* longhands, not inset: Safari before iOS 14.1 ignores inset and the radio shrank to a dot */
-  .choice input { position: absolute; opacity: 0; top: 0; left: 0; width: 100%; height: 100%; margin: 0; cursor: pointer; }
-  .choice label, .choice .face { display: flex; align-items: center; gap: 14px; padding: 16px; border: 1.5px solid var(--line); border-radius: 4px; background: var(--white); transition: border-color .15s, background .15s; }
-  .choice .ico { font-size: 28px; color: var(--orange); }
-  .choice strong { display: block; font-family: var(--display); font-size: 15px; color: var(--navy); }
-  .choice strong + span { font-size: 13px; color: var(--muted); }
-  .choice input:checked + .face { border-color: var(--orange); background: #FFF4EE; }
-  .choice input:focus-visible + .face { outline: 3px solid var(--amber); outline-offset: 2px; }
-
-  .appl-list { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
-  .appl { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 12px; border: 1.5px solid var(--line); border-radius: 4px; }
-  .appl.has { border-color: var(--orange); background: #FFF4EE; }
-  .appl .name { font-weight: 700; font-size: 14px; color: var(--navy); }
-  .appl .watts { font-size: 12px; color: var(--muted); }
-  .stepper { display: flex; align-items: center; gap: 4px; flex: none; }
-  .stepper button { width: 30px; height: 30px; border-radius: 4px; border: 1.5px solid var(--line); background: var(--white); color: var(--navy); font-weight: 800; font-size: 16px; line-height: 1; }
-  .stepper button:hover { border-color: var(--orange); color: var(--orange); }
-  .stepper output { width: 26px; text-align: center; font-family: var(--display); font-weight: 700; font-size: 14px; }
-  .custom-add { display: grid; grid-template-columns: 1.6fr 1fr auto; gap: 10px; margin-top: 16px; padding-top: 16px; border-top: 1px dashed var(--line); align-items: end; }
-
-  .field { display: grid; gap: 6px; }
-  .field label { font-family: var(--display); font-weight: 600; font-size: 13px; color: var(--navy); }
-  .field input, .field select { width: 100%; padding: 12px 12px; border: 1.5px solid var(--line); border-radius: 4px; font: inherit; color: var(--ink); background: var(--white); }
-  .field input:focus, .field select:focus { border-color: var(--orange); }
-  .field-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
-  .field-grid .full { grid-column: 1 / -1; }
-
-  .hours { width: 100%; border-collapse: collapse; margin-bottom: 22px; }
-  .hours th { font-family: var(--display); font-size: 12px; text-align: left; color: var(--muted); padding: 0 8px 8px 0; font-weight: 600; }
-  .hours td { padding: 8px 8px 8px 0; border-top: 1px solid var(--line); font-size: 14px; }
-  .hours td:first-child { font-weight: 700; color: var(--navy); }
-  .hours input { width: 84px; padding: 9px 10px; border: 1.5px solid var(--line); border-radius: 4px; font: inherit; }
-
-  .result-pkg { background: var(--navy); color: var(--white); padding: 22px; border-radius: 4px; }
-  .result-pkg h3 { color: var(--white); font-size: 26px; margin-top: 12px; }
-  .result-pkg .price { font-family: var(--display); font-weight: 900; font-size: clamp(22px, 5vw, 32px); line-height: 1.15; color: var(--orange); margin-top: 2px; }
-  .result-pkg p { color: #D5DEE6; font-size: 14px; margin-top: 8px; }
-  .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 16px 0; }
-  .metric { border: 1px solid var(--line); border-radius: 4px; padding: 12px; }
-  .metric span { display: block; font-size: 12px; color: var(--muted); }
-  .metric b { font-family: var(--display); font-size: 18px; color: var(--navy); font-weight: 800; }
-  .result-list { font-size: 14px; color: var(--muted); columns: 2; column-gap: 24px; margin-bottom: 14px; }
-  .result-list li { break-inside: avoid; padding: 2px 0; }
-  .result-note { font-size: 13px; color: var(--muted); border-left: 3px solid var(--amber); padding-left: 12px; }
-  .result-next { margin-top: 14px; padding: 12px 14px; background: #FFF4EE; border: 1px solid #F9C9B3; border-radius: 4px; font-size: 14px; font-weight: 600; color: var(--navy); }
-  .result-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 18px; }
 
   @media (max-width: 1000px) {
     .nav { display: none; }
@@ -370,32 +283,13 @@ $socialLinks = site_social_links();
     .benefits li { padding: 18px 4px; }
     .benefits li + li::before { top: 0; left: 0; width: 100%; height: 1px; display: block !important; }
     .why { grid-template-columns: repeat(2, 1fr); }
+    .assess-grid { grid-template-columns: 1fr; }
+    .assess .btn { min-width: 0; width: 100%; }
     .site-footer .wrap.cols { grid-template-columns: 1fr; }
     .site-footer .wrap.cols { text-align: center; justify-items: center; }
     .site-footer .brand img { margin-inline: auto; }
     .contact-list li, .socials { justify-content: center; }
     .legal .wrap { flex-direction: column; align-items: center; text-align: center; gap: 8px; }
-    /* phones: only the open tab shows its name, the others shrink to their number */
-    .la-head { padding: 4px 14px 0; }
-    .la-tabs { display: flex; gap: 4px; }
-    .la-tabs button { flex: 0 0 34px; text-align: center; }
-    .la-tabs button[aria-selected="true"] { flex: 1 1 auto; text-align: left; padding-left: 6px; }
-    .la-tabs button:not([aria-selected="true"]) .t { display: none; }
-    .la-body { padding: 22px 16px; }
-    .la-foot { padding: 14px 16px; }
-    .choice-grid, .appl-list, .field-grid { grid-template-columns: 1fr; }
-    .custom-add { grid-template-columns: 1fr 1fr; }
-    .custom-add .btn { grid-column: 1 / -1; }
-    .metrics { grid-template-columns: repeat(2, 1fr); }
-    .result-list { columns: 1; }
-    .la-progress li { font-size: 0; }
-    .la-body { padding: 20px 16px; }
-    /* iPhones zoom the page into any input under 16px */
-    .hours input { font-size: 16px; }
-    .la-foot { padding: 14px 16px; }
-    .la-nav { width: 100%; }
-    .la-nav .btn { flex: 0 1 auto; min-width: 0; padding-inline: 10px; gap: 6px; white-space: normal; }
-    .la-nav #laNext { flex-grow: 1; }
   }
   @media (prefers-reduced-motion: reduce) {
     html { scroll-behavior: auto; }
@@ -475,7 +369,7 @@ $socialLinks = site_social_links();
   </nav>
   <div class="drawer-actions">
     <a class="btn btn-wa" data-wa="Hello KYNOS Solar Systems, I would like a quote for a solar system." href="#contact"><svg class="ico wa"><use href="#i-wa"/></svg>Get a Quote</a>
-    <a class="btn btn-primary" href="#assessment">Start Load Assessment <svg class="ico"><use href="#i-arrow"/></svg></a>
+    <a class="btn btn-primary" href="assessment.php">Start Load Assessment <svg class="ico"><use href="#i-arrow"/></svg></a>
     <a class="btn btn-outline" href="tel:+<?= htmlspecialchars($phoneIntl, ENT_QUOTES, 'UTF-8') ?>"><svg class="ico" style="font-size:18px"><use href="#i-phone"/></svg>Call <?= htmlspecialchars($phoneDisplay, ENT_QUOTES, 'UTF-8') ?></a>
     <p>Solar packages from <?= htmlspecialchars($packagesFrom, ENT_QUOTES, 'UTF-8') ?></p>
   </div>
@@ -490,7 +384,7 @@ $socialLinks = site_social_links();
         <p><?= htmlspecialchars(setting('page_home_hero_intro'), ENT_QUOTES, 'UTF-8') ?></p>
         <div class="hero-actions">
           <a class="btn btn-wa" data-wa="Hello KYNOS Solar Systems, I am interested in a solar package from <?= htmlspecialchars($packagesFrom, ENT_QUOTES, 'UTF-8') ?>." href="#package"><svg class="ico wa"><use href="#i-wa"/></svg><span>Get a Solar Package<br>from <?= htmlspecialchars($packagesFrom, ENT_QUOTES, 'UTF-8') ?></span><svg class="ico"><use href="#i-arrow"/></svg></a>
-          <a class="btn btn-outline" href="#assessment">Request a Free Assessment <svg class="ico"><use href="#i-arrow"/></svg></a>
+          <a class="btn btn-outline" href="assessment.php">Request a Free Assessment <svg class="ico"><use href="#i-arrow"/></svg></a>
         </div>
       </div>
     </div>
@@ -578,82 +472,17 @@ $socialLinks = site_social_links();
     <div class="assess">
       <h2>Solar <span class="accent">Load Assessment</span></h2>
       <p class="lede">Tell us what you want to power and we'll recommend the right solar package for your home or business.</p>
-      <div class="la" id="la">
-        <div class="la-head">
-          <div class="la-tabs" role="tablist" id="laTabs" aria-label="Assessment steps">
-            <button type="button" role="tab" id="laTab0" aria-controls="laStep0"><span class="n">1.</span><span class="t">Property</span></button>
-            <button type="button" role="tab" id="laTab1" aria-controls="laStep1"><span class="n">2.</span><span class="t">Appliances</span></button>
-            <button type="button" role="tab" id="laTab2" aria-controls="laStep2"><span class="n">3.</span><span class="t">Usage</span></button>
-            <button type="button" role="tab" id="laTab3" aria-controls="laStep3"><span class="n">4.</span><span class="t">Your details</span></button>
-            <button type="button" role="tab" id="laTab4" aria-controls="laStep4"><span class="n">5.</span><span class="t">Recommendation</span></button>
-          </div>
+      <div class="assess-grid">
+        <div>
+          <ul class="assess-steps">
+            <li><svg class="ico"><use href="#i-home"/></svg><div><strong>Type of property</strong><span>Home, office or business</span></div></li>
+            <li><svg class="ico"><use href="#i-plug"/></svg><div><strong>List your appliances</strong><span>What you want to power</span></div></li>
+            <li><svg class="ico"><use href="#i-clock"/></svg><div><strong>Usage details</strong><span>Quantity and hours of use</span></div></li>
+            <li><svg class="ico"><use href="#i-calc"/></svg><div><strong>Get a recommendation</strong><span>We'll suggest the right package</span></div></li>
+          </ul>
+          <a class="btn btn-primary" href="assessment.php">Start Load Assessment <svg class="ico"><use href="#i-arrow"/></svg></a>
         </div>
-
-        <form class="la-body" id="laForm" novalidate>
-          <section class="la-step" data-step="0" id="laStep0" role="tabpanel" aria-labelledby="laTab0">
-            <h3>What type of property is it?</h3>
-            <p class="hint">This helps us understand how the system will be used.</p>
-            <div class="choice-grid">
-              <label class="choice"><input type="radio" name="property" id="p-home" value="Home"><span class="face"><svg class="ico"><use href="#i-home"/></svg><span><strong>Home</strong><span>House or apartment</span></span></span></label>
-              <label class="choice"><input type="radio" name="property" id="p-office" value="Office"><span class="face"><svg class="ico"><use href="#i-office"/></svg><span><strong>Office</strong><span>Workspace or clinic</span></span></span></label>
-              <label class="choice"><input type="radio" name="property" id="p-shop" value="Business"><span class="face"><svg class="ico"><use href="#i-shop"/></svg><span><strong>Business</strong><span>Shop, restaurant, salon</span></span></span></label>
-              <label class="choice"><input type="radio" name="property" id="p-other" value="Other"><span class="face"><svg class="ico"><use href="#i-dots"/></svg><span><strong>Other</strong><span>School, church, farm</span></span></span></label>
-            </div>
-          </section>
-
-          <section class="la-step" data-step="1" id="laStep1" role="tabpanel" aria-labelledby="laTab1">
-            <h3>What do you want to power?</h3>
-            <p class="hint">Set how many of each appliance you have. Wattages are typical values, your installer will confirm the real ones.</p>
-            <div class="appl-list" id="applList"></div>
-            <div class="custom-add">
-              <div class="field"><label for="cName">Something else?</label><input id="cName" type="text" maxlength="40" placeholder="Appliance name"></div>
-              <div class="field"><label for="cWatts">Watts</label><input id="cWatts" type="number" min="1" max="20000" inputmode="numeric" placeholder="e.g. 300"></div>
-              <button class="btn btn-outline btn-sm" type="button" id="cAdd" style="height:46px">Add</button>
-            </div>
-          </section>
-
-          <section class="la-step" data-step="2" id="laStep2" role="tabpanel" aria-labelledby="laTab2">
-            <h3>How do you use them?</h3>
-            <p class="hint">Adjust the hours each appliance runs on a normal day.</p>
-            <table class="hours">
-              <thead><tr><th>Appliance</th><th>Qty</th><th>Hours per day</th></tr></thead>
-              <tbody id="hoursBody"></tbody>
-            </table>
-            <div class="field">
-              <label for="mode">How do you want to use solar?</label>
-              <select id="mode" name="mode">
-                <option value="backup">Backup when the power goes off</option>
-                <option value="hybrid" selected>Solar by day, battery through the evening</option>
-                <option value="offgrid">Fully off-grid, day and night</option>
-              </select>
-            </div>
-          </section>
-
-          <section class="la-step" data-step="3" id="laStep3" role="tabpanel" aria-labelledby="laTab3">
-            <h3>Your details</h3>
-            <p class="hint">So our team can confirm your recommendation and arrange a site visit.</p>
-            <div class="field-grid">
-              <div class="field"><label for="fName">Full name *</label><input id="fName" type="text" maxlength="60" autocomplete="name" required></div>
-              <div class="field"><label for="fPhone">Telephone *</label><input id="fPhone" type="tel" maxlength="16" autocomplete="tel" placeholder="e.g. 053 040 9118" required></div>
-              <div class="field"><label for="fLocation">Location *</label><input id="fLocation" type="text" maxlength="60" placeholder="Town or area, e.g. East Legon" required></div>
-              <div class="field"><label for="fEmail">Email (optional)</label><input id="fEmail" type="email" maxlength="80" autocomplete="email"></div>
-              <div class="field full"><label for="fNotes">Anything else we should know? (optional)</label><input id="fNotes" type="text" maxlength="200" placeholder="Roof type, budget, timeline"></div>
-            </div>
-          </section>
-
-          <section class="la-step" data-step="4" id="laStep4" role="tabpanel" aria-labelledby="laTab4">
-            <div id="resultBox"></div>
-          </section>
-        </form>
-
-        <div class="la-foot">
-          <p class="la-error" id="laError" role="alert"></p>
-          <span class="la-live" id="laLive"></span>
-          <div class="la-nav">
-            <button class="btn btn-outline btn-sm" type="button" id="laBack"><svg class="ico"><use href="#i-back"/></svg>Back</button>
-            <button class="btn btn-primary btn-sm" type="button" id="laNext">Next <svg class="ico"><use href="#i-arrow"/></svg></button>
-          </div>
-        </div>
+        <img src="images/solar-panels.jpg" alt="Solar panels catching the evening sun" loading="lazy">
       </div>
     </div>
   </section>
@@ -746,88 +575,9 @@ $socialLinks = site_social_links();
 (function () {
   "use strict";
 
-  /* ---- Business settings ----
-     Contact numbers and package names/prices come from the admin dashboard.
-     The sizing limits below stay in code because they drive the calculator. */
-  var CONFIG = {
-    whatsapp: <?= json_encode($whatsappNumber) ?>,
-    phoneDisplay: <?= json_encode($phoneDisplay) ?>,
-    sunHours: 4.5,          // average peak sun hours per day in Ghana
-    systemLoss: 0.75,       // panel-to-socket efficiency
-    panelWatts: 620,
-    batteryUsable: 0.81,    // depth of discharge x inverter efficiency
-    inverterSizes: [1.5, 3, 4.2, 6, 8, 10, 12, 16, 20],
-    // share of daily energy the battery must carry, per usage mode
-    batteryShare: { backup: 0.35, hybrid: 0.5, offgrid: 1 },
-    packages: <?= json_encode($jsPackages, JSON_UNESCAPED_SLASHES) ?>
-  };
-  var leadSaved = false;
-
-  function saveAssessment(c, property, appliances) {
-    if (leadSaved) return;
-    var payload = {
-      csrf_token: document.querySelector('meta[name="csrf-token"]').content,
-      website: "",
-      name: $("fName").value.trim(), phone: $("fPhone").value.trim(),
-      location: $("fLocation").value.trim(), email: $("fEmail").value.trim(),
-      notes: $("fNotes").value.trim(), property_type: property,
-      usage_mode: c.mode, running_load_w: c.running,
-      daily_energy_kwh: Number((c.daily / 1000).toFixed(2)),
-      inverter_kva: c.kva, battery_kwh: c.battery, panel_count: c.panels,
-      recommended_package: c.package ? c.package.name : "Custom Solar Package",
-      appliances: appliances
-    };
-    fetch("submit-assessment.php", {
-      method: "POST", headers: {"Content-Type": "application/json", "Accept": "application/json"},
-      body: JSON.stringify(payload), credentials: "same-origin"
-    }).then(function (response) {
-      if (!response.ok) throw new Error("Save failed");
-      leadSaved = true;
-    }).catch(function () {
-      /* WhatsApp remains available if the database is temporarily unavailable. */
-    });
-  }
-
-  /* name, watts, default hours per day, duty cycle (share of time actually drawing power) */
-  var APPLIANCES = [
-    ["LED bulb", 10, 6, 1],
-    ["Ceiling fan", 75, 8, 1],
-    ["Standing fan", 60, 6, 1],
-    ["Television", 100, 5, 1],
-    ["Decoder / Wi-Fi router", 30, 10, 1],
-    ["Phone charger", 10, 3, 1],
-    ["Laptop", 65, 6, 1],
-    ["Desktop computer", 200, 6, 1],
-    ["Printer", 50, 1, 1],
-    ["Fridge", 150, 24, 0.4],
-    ["Deep freezer", 200, 24, 0.4],
-    ["Air conditioner (1 HP)", 750, 6, 0.6],
-    ["Air conditioner (1.5 HP)", 1100, 6, 0.6],
-    ["Washing machine", 500, 1, 1],
-    ["Microwave", 1000, 0.5, 1],
-    ["Electric kettle", 1500, 0.25, 1],
-    ["Electric iron", 1000, 0.5, 1],
-    ["Blender", 400, 0.25, 1],
-    ["Water pump (1 HP)", 750, 1, 1]
-  ].map(function (a) { return { name: a[0], watts: a[1], hours: a[2], duty: a[3], qty: 0 }; });
-
+  var CONFIG = { whatsapp: <?= json_encode($whatsappNumber) ?> };
   var $ = function (id) { return document.getElementById(id); };
-  function el(tag, cls, text) {
-    var n = document.createElement(tag);
-    if (cls) n.className = cls;
-    if (text !== undefined) n.textContent = text;
-    return n;
-  }
-  function icon(id) {
-    var s = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-    s.setAttribute("class", "ico");
-    var u = document.createElementNS("http://www.w3.org/2000/svg", "use");
-    u.setAttribute("href", "#" + id);
-    s.appendChild(u);
-    return s;
-  }
   function waLink(text) { return "https://wa.me/" + CONFIG.whatsapp + "?text=" + encodeURIComponent(text); }
-  function num(n) { return Math.round(n).toLocaleString("en-GB"); }
 
   /* ---- Page chrome ---- */
   $("year").textContent = new Date().getFullYear();
@@ -865,7 +615,7 @@ $socialLinks = site_social_links();
   (function () {
     var groups = [
       [".benefits li", 90], [".section-head", 0], [".solution", 110], [".why > div", 90, "zoom"],
-      [".package > *", 70], [".assess > h2, .assess > .lede, .assess > .la", 80],
+      [".package > *", 70], [".assess > h2, .assess > .lede, .assess-steps li, .assess-grid > img, .assess-grid .btn", 80],
       [".project", 110], [".cta .wrap > *", 120], [".site-footer .cols > *", 90]
     ];
     var items = [];
@@ -894,268 +644,6 @@ $socialLinks = site_social_links();
     items.forEach(function (n) { io.observe(n); });
   })();
 
-  /* ---- Load assessment ---- */
-  var dlg = $("la"), step = 0, LAST = 4;
-  var steps = dlg.querySelectorAll(".la-step");
-  var tabs = $("laTabs").children;
-  var errorBox = $("laError"), live = $("laLive");
-  var backBtn = $("laBack"), nextBtn = $("laNext");
-
-  function selected() { return APPLIANCES.filter(function (a) { return a.qty > 0; }); }
-
-  function calc() {
-    var mode = $("mode").value;
-    var running = 0, daily = 0;
-    selected().forEach(function (a) {
-      running += a.qty * a.watts;
-      daily += a.qty * a.watts * a.hours * a.duty;
-    });
-    var needKva = running * 1.25 / 0.8 / 1000;
-    var kva = null;
-    for (var i = 0; i < CONFIG.inverterSizes.length; i++) {
-      if (CONFIG.inverterSizes[i] >= needKva) { kva = CONFIG.inverterSizes[i]; break; }
-    }
-    var batteryNeed = daily / 1000 * CONFIG.batteryShare[mode] / CONFIG.batteryUsable;
-    var battery = Math.max(2.4, Math.ceil(batteryNeed * 10) / 10);
-    var panels = Math.max(2, Math.ceil(daily / (CONFIG.sunHours * CONFIG.systemLoss) / CONFIG.panelWatts));
-    var matchedPackage = null;
-    for (var p = 0; p < CONFIG.packages.length; p++) {
-      var candidate = CONFIG.packages[p];
-      if (kva !== null && kva <= candidate.maxKva && battery <= candidate.maxBatteryKwh && panels <= candidate.maxPanels) {
-        matchedPackage = candidate;
-        break;
-      }
-    }
-    return {
-      mode: mode, running: running, daily: daily, kva: kva, battery: battery, panels: panels,
-      arrayKw: panels * CONFIG.panelWatts / 1000,
-      package: matchedPackage
-    };
-  }
-
-  function updateLive() {
-    if (step === 1 || step === 2) {
-      var c = calc();
-      live.textContent = "";
-      live.append("Running load: ", el("b", "", num(c.running) + " W"), "  |  Daily use: ", el("b", "", (c.daily / 1000).toFixed(1) + " kWh"));
-    } else {
-      live.textContent = "";
-    }
-  }
-
-  function renderAppliances() {
-    var list = $("applList");
-    list.textContent = "";
-    APPLIANCES.forEach(function (a) {
-      var row = el("div", "appl" + (a.qty > 0 ? " has" : ""));
-      var info = el("div");
-      info.append(el("div", "name", a.name), el("div", "watts", num(a.watts) + " W each"));
-      var st = el("div", "stepper");
-      var minus = el("button", "", "−"), out = el("output", "", String(a.qty)), plus = el("button", "", "+");
-      minus.type = plus.type = "button";
-      minus.setAttribute("aria-label", "Fewer: " + a.name);
-      plus.setAttribute("aria-label", "More: " + a.name);
-      function set(q) {
-        a.qty = Math.min(99, Math.max(0, q));
-        out.textContent = a.qty;
-        row.classList.toggle("has", a.qty > 0);
-        errorBox.textContent = "";
-        updateLive();
-      }
-      minus.addEventListener("click", function () { set(a.qty - 1); });
-      plus.addEventListener("click", function () { set(a.qty + 1); });
-      st.append(minus, out, plus);
-      row.append(info, st);
-      list.appendChild(row);
-    });
-  }
-
-  function renderHours() {
-    var body = $("hoursBody");
-    body.textContent = "";
-    selected().forEach(function (a) {
-      var tr = el("tr");
-      var input = el("input");
-      input.type = "number"; input.min = "0"; input.max = "24"; input.step = "0.25";
-      input.value = a.hours;
-      input.setAttribute("aria-label", "Hours per day: " + a.name);
-      input.addEventListener("input", function () {
-        var v = parseFloat(input.value);
-        a.hours = isNaN(v) ? 0 : Math.min(24, Math.max(0, v));
-        updateLive();
-      });
-      var td = el("td"); td.appendChild(input);
-      tr.append(el("td", "", a.name), el("td", "", String(a.qty)), td);
-      body.appendChild(tr);
-    });
-  }
-
-  var MODE_LABEL = { backup: "Backup when the power goes off", hybrid: "Solar by day, battery through the evening", offgrid: "Fully off-grid, day and night" };
-
-  function renderResult() {
-    var c = calc(), box = $("resultBox"), matched = c.package;
-    var property = (dlg.querySelector("input[name=property]:checked") || {}).value || "";
-    var name = $("fName").value.trim(), phone = $("fPhone").value.trim();
-    var locationText = $("fLocation").value.trim(), email = $("fEmail").value.trim(), notes = $("fNotes").value.trim();
-    var oversize = c.kva === null;
-    var pkgName = matched ? matched.name : "Custom Solar Package";
-    var kvaText = oversize ? "Above 20 kVA" : c.kva + " kVA";
-
-    box.textContent = "";
-    box.appendChild(el("h3", "", name ? name.split(" ")[0] + ", here is your recommendation" : "Your recommendation"));
-
-    var pkg = el("div", "result-pkg");
-    pkg.style.marginTop = "14px";
-    pkg.append(el("span", "tag", "RECOMMENDED FOR YOU"), el("h3", "", pkgName));
-    if (matched) {
-      pkg.append(el("div", "price", matched.price), el("p", "", "Your estimated load fits this advertised package. Final sizing is confirmed after a free site assessment."));
-    } else if (oversize) {
-      pkg.append(el("div", "price", "Price sent after your message"), el("p", "", "Your load is larger than a standard package, so there is no fixed price to show here. Send us this assessment on WhatsApp and we will reply with your price once we receive your message."));
-    } else {
-      pkg.append(el("div", "price", "Price sent after your message"), el("p", "", "Your load needs a custom system beyond the advertised packages. Send us this assessment on WhatsApp and we will reply with your price once we receive your message."));
-    }
-    box.appendChild(pkg);
-
-    var metrics = el("div", "metrics");
-    [["Running load", num(c.running) + " W"], ["Daily energy", (c.daily / 1000).toFixed(1) + " kWh"],
-     ["Inverter", kvaText], ["Battery", c.battery + " kWh"],
-     ["Solar panels", c.panels + " x " + CONFIG.panelWatts + " W"], ["Array size", c.arrayKw.toFixed(1) + " kWp"]]
-      .forEach(function (m) { var d = el("div", "metric"); d.append(el("span", "", m[0]), el("b", "", m[1])); metrics.appendChild(d); });
-    box.appendChild(metrics);
-
-    var ul = el("ul", "result-list");
-    selected().forEach(function (a) { ul.appendChild(el("li", "", a.qty + " x " + a.name + ", " + a.hours + " h/day")); });
-    box.appendChild(ul);
-    box.appendChild(el("p", "result-note", "This is an estimate based on typical appliance wattages. Final sizing and price are confirmed after a free site assessment."));
-
-    var msg = [
-      "Hello KYNOS Solar Systems, I completed the Solar Load Assessment on your website.",
-      "",
-      "Name: " + name,
-      "Telephone: " + phone,
-      "Location: " + locationText
-    ];
-    if (email) msg.push("Email: " + email);
-    msg.push("Property: " + property, "Usage: " + MODE_LABEL[c.mode], "", "Appliances:");
-    selected().forEach(function (a) { msg.push("- " + a.qty + " x " + a.name + " (" + a.watts + " W), " + a.hours + " h/day"); });
-    msg.push("", "Running load: " + num(c.running) + " W", "Daily energy: " + (c.daily / 1000).toFixed(1) + " kWh",
-      "Suggested system: " + kvaText + " inverter, " + c.battery + " kWh battery, " + c.panels + " x " + CONFIG.panelWatts + " W panels",
-      "Suggested package: " + pkgName + (matched ? " (" + matched.price + ")" : ""));
-    if (notes) msg.push("", "Notes: " + notes);
-    if (!matched) msg.push("", "Please send me the price for this system.");
-
-    saveAssessment(c, property, selected().map(function (a) {
-      return { name: a.name, quantity: a.qty, watts: a.watts, hours_per_day: a.hours };
-    }));
-
-    if (!matched) box.appendChild(el("p", "result-next", "Next step: tap the green button to send this to KYNOS. Your price comes back to you on WhatsApp after we receive it."));
-    var actions = el("div", "result-actions");
-    var send = el("a", "btn btn-wa");
-    send.href = waLink(msg.join("\n")); send.target = "_blank"; send.rel = "noopener";
-    var wa = icon("i-wa"); wa.classList.add("wa");
-    send.append(wa, "Send to KYNOS on WhatsApp");
-    var call = el("a", "btn btn-outline");
-    call.href = "tel:+" + CONFIG.whatsapp;
-    call.append(icon("i-phone"), "Call " + CONFIG.phoneDisplay);
-    actions.append(send, call);
-    box.appendChild(actions);
-  }
-
-  function validate(step) {
-    if (step === 0 && !dlg.querySelector("input[name=property]:checked")) return "Please choose a property type.";
-    if (step === 1 && !selected().length) return "Add at least one appliance to continue.";
-    if (step === 2 && calc().daily <= 0) return "Enter the hours of use for at least one appliance.";
-    if (step === 3) {
-      if ($("fName").value.trim().length < 2) return "Please enter your full name.";
-      if (!/^(\+?233|0)\d{9}$/.test($("fPhone").value.replace(/[\s-]/g, ""))) return "Please enter a valid Ghana phone number, e.g. 053 040 9118.";
-      if ($("fLocation").value.trim().length < 2) return "Please enter your location.";
-      var email = $("fEmail").value.trim();
-      if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return "That email address does not look right.";
-    }
-    return "";
-  }
-
-  function show(n, focusTab) {
-    step = n;
-    steps.forEach(function (s, i) { s.classList.toggle("on", i === n); });
-    for (var i = 0; i < tabs.length; i++) {
-      tabs[i].classList.toggle("done", i < n);
-      tabs[i].setAttribute("aria-selected", i === n ? "true" : "false");
-      tabs[i].tabIndex = i === n ? 0 : -1;
-    }
-    if (focusTab) tabs[n].focus();
-    if (n === 2) renderHours();
-    if (n === LAST) renderResult();
-    backBtn.style.visibility = n === 0 ? "hidden" : "visible";
-    nextBtn.textContent = "";
-    if (n === LAST) nextBtn.append("Start again");
-    else nextBtn.append(n === 3 ? "See my recommendation " : "Next ", icon("i-arrow"));
-    errorBox.textContent = "";
-    updateLive();
-  }
-
-  /* after a step change, bring the top of the panel back into view if the user had scrolled past it */
-  function toTop() {
-    if (dlg.getBoundingClientRect().top < 0) dlg.scrollIntoView({ behavior: "smooth", block: "start" });
-  }
-
-  /* move to step n, stopping at the first earlier step that is not filled in yet */
-  function go(n, focusTab) {
-    if (n === step) return;
-    for (var s = 0; s < n; s++) {
-      var err = validate(s);
-      if (err) {
-        if (s !== step) show(s, focusTab);
-        errorBox.textContent = err;
-        toTop();
-        return;
-      }
-    }
-    show(n, focusTab);
-    toTop();
-  }
-
-  function reset() {
-    leadSaved = false;
-    APPLIANCES = APPLIANCES.filter(function (a) { return !a.custom; });
-    APPLIANCES.forEach(function (a) { a.qty = 0; });
-    $("laForm").reset();
-    renderAppliances();
-    show(0);
-  }
-
-  nextBtn.addEventListener("click", function () {
-    if (step === LAST) { reset(); toTop(); return; }
-    go(step + 1);
-  });
-  backBtn.addEventListener("click", function () { if (step > 0) go(step - 1); });
-  for (var t = 0; t < tabs.length; t++) {
-    (function (n) { tabs[n].addEventListener("click", function () { go(n); }); })(t);
-  }
-  $("laTabs").addEventListener("keydown", function (e) {
-    var d = e.key === "ArrowRight" ? 1 : e.key === "ArrowLeft" ? -1 : 0;
-    if (e.key === "Home") d = -step;
-    if (e.key === "End") d = LAST - step;
-    if (!d) return;
-    e.preventDefault();
-    go(Math.min(LAST, Math.max(0, step + d)), true);
-  });
-  $("laForm").addEventListener("submit", function (e) { e.preventDefault(); nextBtn.click(); });
-  $("laForm").addEventListener("change", function () { errorBox.textContent = ""; updateLive(); });
-
-  $("cAdd").addEventListener("click", function () {
-    var name = $("cName").value.trim(), watts = parseInt($("cWatts").value, 10);
-    if (!name || !(watts > 0) || watts > 20000) { errorBox.textContent = "Enter an appliance name and its wattage (1 to 20,000 W)."; return; }
-    APPLIANCES.push({ name: name, watts: watts, hours: 4, duty: 1, qty: 1, custom: true });
-    $("cName").value = ""; $("cWatts").value = "";
-    renderAppliances();
-    errorBox.textContent = "";
-    updateLive();
-    $("applList").lastElementChild.scrollIntoView({ block: "nearest" });
-  });
-
-  renderAppliances();
-  show(0);
 })();
 </script>
 </body>

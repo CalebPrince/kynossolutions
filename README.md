@@ -13,7 +13,7 @@ The public site includes dedicated About, Solutions, Projects and Contact pages.
 4. Upload the project contents to the domain's `public_html` folder. Do not upload the old `index.html`; `index.php` is the entry point.
 5. In cPanel **MultiPHP Manager**, choose PHP 8.1 or newer. Ensure `pdo_mysql`, `openssl` and `mbstring` are enabled.
 6. Visit `/admin.php`. While no administrator exists you will see a one-time setup screen; create the first **super administrator** there. There is deliberately no default or hard-coded password.
-7. Sign in, then complete a test assessment on the home page and confirm it appears under **Customers**.
+7. Sign in, then complete a test assessment on the Load Assessment page (`assessment.php`) and confirm it appears under **Customers**.
 
 `config.php` is ignored by Git and blocked by `.htaccess`. Never commit production credentials or administrator passwords.
 
