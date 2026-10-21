@@ -110,7 +110,7 @@ $socialLinks = site_social_links();
   .btn:focus-visible, a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid var(--amber); outline-offset: 2px; }
 
   /* Header */
-  .site-header { position: fixed; inset: 0 0 auto 0; z-index: 20; transition: background .3s, box-shadow .3s; }
+  .site-header { position: fixed; top: 0; right: 0; left: 0; z-index: 20; transition: background .3s, box-shadow .3s; }
   .site-header .wrap { transition: padding .3s; }
   .site-header .brand img { transition: height .3s; }
   .site-header.scrolled { background: rgba(255,255,255,.96); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); box-shadow: 0 6px 24px rgba(11,42,64,.12); }
@@ -127,7 +127,7 @@ $socialLinks = site_social_links();
 
   /* Hero */
   .hero { position: relative; min-height: 640px; padding: 138px 0 36px; background: #F6FAFD url("images/hero.jpg") left 15vw center / cover no-repeat; }
-  .hero::before { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, #F6FAFD 0%, #F6FAFD 16%, rgba(246,250,253,.9) 30%, rgba(246,250,253,.4) 46%, rgba(246,250,253,0) 58%), linear-gradient(180deg, rgba(255,255,255,.8) 0, rgba(255,255,255,0) 130px); }
+  .hero::before { content: ""; position: absolute; top: 0; right: 0; bottom: 0; left: 0; background: linear-gradient(90deg, #F6FAFD 0%, #F6FAFD 16%, rgba(246,250,253,.9) 30%, rgba(246,250,253,.4) 46%, rgba(246,250,253,0) 58%), linear-gradient(180deg, rgba(255,255,255,.8) 0, rgba(255,255,255,0) 130px); }
   .hero .wrap { position: relative; }
   .hero-copy { max-width: 500px; }
   .eyebrow { font-family: var(--display); font-weight: 700; font-size: 12px; letter-spacing: .14em; color: var(--navy); }
@@ -245,7 +245,7 @@ $socialLinks = site_social_links();
   @keyframes pop { from { opacity: 0; transform: translateY(18px) scale(.97); } to { opacity: 1; transform: none; } }
   @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
   .js .site-header { animation: drop .7s cubic-bezier(.2,.7,.2,1) both; }
-  .js .hero::after { content: ""; position: absolute; inset: 0; background: #F6FAFD; pointer-events: none; animation: heroFade 1.2s ease-out forwards; }
+  .js .hero::after { content: ""; position: absolute; top: 0; right: 0; bottom: 0; left: 0; background: #F6FAFD; pointer-events: none; animation: heroFade 1.2s ease-out forwards; }
   .js .hero-copy > *, .js .hero h1 span { animation: rise .8s cubic-bezier(.2,.7,.2,1) both; }
   .js .hero-copy > .eyebrow { animation-delay: .15s; }
   .js .hero-copy > h1 { animation: none; }
@@ -268,7 +268,7 @@ $socialLinks = site_social_links();
   .la-step.on { animation: rise .35s cubic-bezier(.2,.7,.2,1); }
 
   /* Mobile drawer */
-  .drawer-backdrop { position: fixed; inset: 0; z-index: 40; background: rgba(7,30,47,.6); opacity: 0; visibility: hidden; transition: opacity .3s, visibility .3s; }
+  .drawer-backdrop { position: fixed; top: 0; right: 0; bottom: 0; left: 0; z-index: 40; background: rgba(7,30,47,.6); opacity: 0; visibility: hidden; transition: opacity .3s, visibility .3s; }
   .drawer { position: fixed; top: 0; right: 0; bottom: 0; z-index: 50; width: min(340px, 88vw); background: var(--white); display: flex; flex-direction: column; transform: translateX(100%); visibility: hidden; transition: transform .35s cubic-bezier(.2,.7,.2,1), visibility .35s; box-shadow: -18px 0 50px rgba(7,30,47,.25); overflow-y: auto; }
   .drawer-open .drawer { transform: none; visibility: visible; }
   .drawer-open .drawer-backdrop { opacity: 1; visibility: visible; }
@@ -317,12 +317,13 @@ $socialLinks = site_social_links();
   .la-error:empty { display: none; }
 
   .choice-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
-  .choice { position: relative; }
-  .choice input { position: absolute; opacity: 0; inset: 0; cursor: pointer; }
+  .choice { position: relative; display: block; cursor: pointer; }
+  /* longhands, not inset: Safari before iOS 14.1 ignores inset and the radio shrank to a dot */
+  .choice input { position: absolute; opacity: 0; top: 0; left: 0; width: 100%; height: 100%; margin: 0; cursor: pointer; }
   .choice label, .choice .face { display: flex; align-items: center; gap: 14px; padding: 16px; border: 1.5px solid var(--line); border-radius: 4px; background: var(--white); transition: border-color .15s, background .15s; }
   .choice .ico { font-size: 28px; color: var(--orange); }
   .choice strong { display: block; font-family: var(--display); font-size: 15px; color: var(--navy); }
-  .choice span span { font-size: 13px; color: var(--muted); }
+  .choice strong + span { font-size: 13px; color: var(--muted); }
   .choice input:checked + .face { border-color: var(--orange); background: #FFF4EE; }
   .choice input:focus-visible + .face { outline: 3px solid var(--amber); outline-offset: 2px; }
 
@@ -704,10 +705,10 @@ $socialLinks = site_social_links();
       <h3>What type of property is it?</h3>
       <p class="hint">This helps us understand how the system will be used.</p>
       <div class="choice-grid">
-        <div class="choice"><input type="radio" name="property" id="p-home" value="Home"><div class="face"><svg class="ico"><use href="#i-home"/></svg><span><strong>Home</strong><span>House or apartment</span></span></div></div>
-        <div class="choice"><input type="radio" name="property" id="p-office" value="Office"><div class="face"><svg class="ico"><use href="#i-office"/></svg><span><strong>Office</strong><span>Workspace or clinic</span></span></div></div>
-        <div class="choice"><input type="radio" name="property" id="p-shop" value="Business"><div class="face"><svg class="ico"><use href="#i-shop"/></svg><span><strong>Business</strong><span>Shop, restaurant, salon</span></span></div></div>
-        <div class="choice"><input type="radio" name="property" id="p-other" value="Other"><div class="face"><svg class="ico"><use href="#i-dots"/></svg><span><strong>Other</strong><span>School, church, farm</span></span></div></div>
+        <label class="choice"><input type="radio" name="property" id="p-home" value="Home"><span class="face"><svg class="ico"><use href="#i-home"/></svg><span><strong>Home</strong><span>House or apartment</span></span></span></label>
+        <label class="choice"><input type="radio" name="property" id="p-office" value="Office"><span class="face"><svg class="ico"><use href="#i-office"/></svg><span><strong>Office</strong><span>Workspace or clinic</span></span></span></label>
+        <label class="choice"><input type="radio" name="property" id="p-shop" value="Business"><span class="face"><svg class="ico"><use href="#i-shop"/></svg><span><strong>Business</strong><span>Shop, restaurant, salon</span></span></span></label>
+        <label class="choice"><input type="radio" name="property" id="p-other" value="Other"><span class="face"><svg class="ico"><use href="#i-dots"/></svg><span><strong>Other</strong><span>School, church, farm</span></span></span></label>
       </div>
     </section>
 
