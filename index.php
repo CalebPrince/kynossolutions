@@ -287,9 +287,14 @@ $socialLinks = site_social_links();
   .drawer-actions p { font-size: 13px; color: var(--muted); text-align: center; margin-top: 4px; }
 
   /* Assessment dialog */
-  dialog.la { border: 0; padding: 0; width: min(760px, 100% - 24px); max-height: min(92vh, 860px); border-radius: 6px; color: var(--ink); box-shadow: 0 30px 80px rgba(7,30,47,.45); overflow: hidden; }
+  dialog.la { border: 0; padding: 0; width: min(760px, 100% - 24px); max-height: min(92vh, 860px); max-height: min(92dvh, 860px); border-radius: 6px; color: var(--ink); background: var(--white); box-shadow: 0 30px 80px rgba(7,30,47,.45); overflow: hidden; }
+  dialog.la:not([open]) { display: none; }
   dialog.la[open] { display: flex; flex-direction: column; }
   dialog.la::backdrop { background: rgba(7,30,47,.72); }
+  /* older iPhones (Safari before 15.4) have no <dialog>: the script positions it by hand */
+  dialog.la.la-polyfill[open] { position: fixed; top: 50%; left: 50%; margin: 0; z-index: 10001; -webkit-transform: translate(-50%, -50%); transform: translate(-50%, -50%); animation: fade .3s ease-out; }
+  .la-backdrop { position: fixed; top: 0; right: 0; bottom: 0; left: 0; z-index: 10000; background: rgba(7,30,47,.72); }
+  html.la-lock, html.la-lock body { overflow: hidden; }
   .la-head { background: var(--navy); color: var(--white); padding: 20px 26px 0; }
   .la-head .row { display: flex; justify-content: space-between; align-items: center; gap: 16px; }
   .la-head h2 { color: var(--white); font-size: 22px; font-weight: 800; }
@@ -298,7 +303,7 @@ $socialLinks = site_social_links();
   .la-progress { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-top: 16px; }
   .la-progress li { font-family: var(--display); font-size: 11px; font-weight: 600; color: #8FA3B4; padding-bottom: 12px; border-bottom: 3px solid rgba(255,255,255,.16); }
   .la-progress li.on { color: var(--white); border-bottom-color: var(--orange); }
-  .la-body { padding: 26px; overflow-y: auto; flex: 1; }
+  .la-body { padding: 26px; overflow-y: auto; flex: 1; min-height: 0; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
   .la-step { display: none; }
   .la-step.on { display: block; }
   .la-step h3 { font-size: 20px; font-weight: 800; }
@@ -396,6 +401,8 @@ $socialLinks = site_social_links();
     .result-list { columns: 1; }
     .la-progress li { font-size: 0; }
     .la-body { padding: 20px 16px; }
+    /* iPhones zoom the page into any input under 16px */
+    .hours input { font-size: 16px; }
     .la-foot { padding: 14px 16px; }
     .la-nav { width: 100%; }
     .la-nav .btn { flex: 0 1 auto; min-width: 0; padding-inline: 10px; gap: 6px; white-space: normal; }
@@ -873,7 +880,10 @@ $socialLinks = site_social_links();
   $("drawerBackdrop").addEventListener("click", function () { setDrawer(false); });
   drawer.addEventListener("click", function (e) { if (e.target.closest("a, [data-open-assessment]")) setDrawer(false); });
   document.addEventListener("keydown", function (e) { if (e.key === "Escape") setDrawer(false); });
-  window.matchMedia("(min-width: 1001px)").addEventListener("change", function (m) { if (m.matches) setDrawer(false); });
+  var wide = window.matchMedia("(min-width: 1001px)");
+  function onWide(m) { if (m.matches) setDrawer(false); }
+  // Safari before iOS 14 only has addListener; calling addEventListener there threw and stopped this whole script
+  if (wide.addEventListener) wide.addEventListener("change", onWide); else if (wide.addListener) wide.addListener(onWide);
 
   /* ---- Scroll reveals ---- */
   (function () {
@@ -1134,11 +1144,35 @@ $socialLinks = site_social_links();
     $("applList").lastElementChild.scrollIntoView({ block: "nearest" });
   });
 
+  /* Safari before iOS 15.4 has no <dialog>, so fall back to a fixed panel and backdrop */
+  var nativeDialog = typeof dlg.showModal === "function", laBackdrop = null;
+  function openDialog() {
+    document.documentElement.classList.add("la-lock");
+    if (nativeDialog) { dlg.showModal(); return; }
+    if (!laBackdrop) {
+      laBackdrop = el("div", "la-backdrop");
+      laBackdrop.addEventListener("click", closeDialog);
+      document.body.appendChild(laBackdrop);
+    }
+    laBackdrop.hidden = false;
+    dlg.classList.add("la-polyfill");
+    dlg.setAttribute("open", "");
+    $("laClose").focus();
+  }
+  function closeDialog() {
+    document.documentElement.classList.remove("la-lock");
+    if (nativeDialog) { if (dlg.open) dlg.close(); return; }
+    dlg.removeAttribute("open");
+    if (laBackdrop) laBackdrop.hidden = true;
+  }
   document.querySelectorAll("[data-open-assessment]").forEach(function (btn) {
-    btn.addEventListener("click", function () { dlg.showModal(); });
+    btn.addEventListener("click", openDialog);
   });
-  $("laClose").addEventListener("click", function () { dlg.close(); });
-  dlg.addEventListener("click", function (e) { if (e.target === dlg) dlg.close(); });
+  $("laClose").addEventListener("click", closeDialog);
+  dlg.addEventListener("click", function (e) { if (e.target === dlg) closeDialog(); });
+  // native dialogs also close on Escape, which skips closeDialog
+  dlg.addEventListener("close", function () { document.documentElement.classList.remove("la-lock"); });
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape" && !nativeDialog && dlg.hasAttribute("open")) closeDialog(); });
 
   renderAppliances();
   show(0);
